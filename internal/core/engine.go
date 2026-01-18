@@ -166,8 +166,6 @@ func (e *LoopEngine) executeIteration() error {
 	prompt := e.buildIterationPrompt(iteration)
 
 	var responseText strings.Builder
-	var toolsUsed int
-	var promiseFound bool
 
 	// If SDK is available, send prompt
 	if e.sdk != nil {
@@ -195,7 +193,6 @@ func (e *LoopEngine) executeIteration() error {
 
 					// Check for promise in streaming text
 					if detectPromise(ev.Text, e.config.PromisePhrase) {
-						promiseFound = true
 						e.emit(NewPromiseDetectedEvent(e.config.PromisePhrase, "ai_response", iteration))
 					}
 
@@ -209,37 +206,14 @@ func (e *LoopEngine) executeIteration() error {
 					))
 
 				case *sdk.ToolResultEvent:
-					// Tool execution completed - SDK handled it, we just log results
-					toolsUsed++
-
-					// Track file changes from edit tool
-					if ev.ToolCall.Name == "edit" {
-						if path, ok := ev.ToolCall.Parameters["path"].(string); ok && path != "" {
-							e.mu.Lock()
-							e.filesChanged[path] = true
-							e.mu.Unlock()
-						}
-					}
-
-					var toolErr error
-					if ev.Error != nil {
-						toolErr = ev.Error
-					}
-
 					e.emit(NewToolExecutionEvent(
 						ev.ToolCall.Name,
 						ev.ToolCall.Parameters,
 						ev.Result,
-						toolErr,
+						ev.Error,
 						0, // Duration not available from SDK events
 						iteration,
 					))
-
-					// Check for promise in tool output
-					if !promiseFound && detectPromise(ev.Result, e.config.PromisePhrase) {
-						promiseFound = true
-						e.emit(NewPromiseDetectedEvent(e.config.PromisePhrase, "tool_output", iteration))
-					}
 
 				case *sdk.ErrorEvent:
 					// SDK errors are typically tool execution failures, which are recoverable
@@ -257,8 +231,7 @@ func (e *LoopEngine) executeIteration() error {
 					}
 
 					// Check full text for promise
-					if !promiseFound && detectPromise(responseText.String(), e.config.PromisePhrase) {
-						promiseFound = true
+					if detectPromise(responseText.String(), e.config.PromisePhrase) {
 						e.emit(NewPromiseDetectedEvent(e.config.PromisePhrase, "ai_response", iteration))
 					}
 				}
@@ -266,19 +239,10 @@ func (e *LoopEngine) executeIteration() error {
 		}
 	}
 
-	// Update statistics
-	e.mu.Lock()
-	e.toolsUsed += toolsUsed
-	// Track if promise was found in this iteration
-	if promiseFound {
-		// LoopEngine will complete after all iterations or timeout
-	}
-	e.mu.Unlock()
-
 	iterationDuration := time.Since(iterationStart)
 
 	// Emit iteration complete
-	e.emit(NewIterationCompleteEvent(iteration, iterationDuration, toolsUsed, promiseFound))
+	e.emit(NewIterationCompleteEvent(iteration, iterationDuration))
 
 	return nil
 }
@@ -348,10 +312,9 @@ func (e *LoopEngine) cancelled() (*LoopResult, error) {
 // Must be called with lock held.
 func (e *LoopEngine) buildResult() *LoopResult {
 	return &LoopResult{
-		State:        e.state,
-		Iterations:   e.iteration,
-		Duration:     time.Since(e.startTime),
-		PromiseFound: false,
+		State:      e.state,
+		Iterations: e.iteration,
+		Duration:   time.Since(e.startTime),
 	}
 }
 

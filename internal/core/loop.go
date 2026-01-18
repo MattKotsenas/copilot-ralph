@@ -81,11 +81,9 @@ type LoopEngine struct {
 	sdk    SDKClient
 
 	// State
-	state        LoopState
-	iteration    int
-	startTime    time.Time
-	toolsUsed    int
-	filesChanged map[string]bool // Track unique files changed
+	state     LoopState
+	iteration int
+	startTime time.Time
 
 	// Events channel for subscribers
 	events       chan any
@@ -110,11 +108,10 @@ func NewLoopEngine(config *LoopConfig, sdk SDKClient) *LoopEngine {
 	}
 
 	return &LoopEngine{
-		config:       config,
-		sdk:          sdk,
-		state:        StateIdle,
-		events:       make(chan any, eventChannelBufferSize),
-		filesChanged: make(map[string]bool),
+		config: config,
+		sdk:    sdk,
+		state:  StateIdle,
+		events: make(chan any, eventChannelBufferSize),
 	}
 }
 
@@ -161,8 +158,6 @@ type LoopResult struct {
 	Iterations int
 	// Duration is the total loop runtime.
 	Duration time.Duration
-	// PromiseFound indicates if the promise phrase was detected.
-	PromiseFound bool
 	// Error contains any error that occurred.
 	Error error
 }

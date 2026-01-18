@@ -26,11 +26,6 @@ func TestToolOutputPromiseAndFileChange(t *testing.T) {
 	result, err := eng.Start(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, StateComplete, result.State)
-	// Since tool call executed, filesChanged should include main.go
-	eng.mu.RLock()
-	_, changed := eng.filesChanged["main.go"]
-	eng.mu.RUnlock()
-	assert.True(t, changed, "file main.go should be tracked as changed")
 }
 
 // Test that tool result containing promise triggers a PromiseDetectedEvent emission (via events channel)

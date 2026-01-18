@@ -474,8 +474,6 @@ func TestLoopEngine_StateTransitions(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, StateComplete, engine.State())
 		assert.Equal(t, StateComplete, result.State)
-		// Promise detected but loop continues - doesn't stop iteration
-		assert.False(t, result.PromiseFound)
 	})
 
 	t.Run("cancel transitions to cancelled", func(t *testing.T) {
@@ -537,7 +535,6 @@ func TestLoopEngine_MaxIterations(t *testing.T) {
 	assert.Equal(t, StateComplete, engine.State())
 	assert.Equal(t, StateComplete, result.State)
 	assert.Equal(t, 3, result.Iterations)
-	assert.False(t, result.PromiseFound)
 }
 
 // TestLoopEngine_Timeout tests timeout handling.
@@ -690,12 +687,10 @@ func TestLoopEventTypes(t *testing.T) {
 	})
 
 	t.Run("IterationCompleteEvent", func(t *testing.T) {
-		event := NewIterationCompleteEvent(2, time.Second, 5, true)
+		event := NewIterationCompleteEvent(2, time.Second)
 
 		assert.Equal(t, 2, event.Iteration)
 		assert.Equal(t, time.Second, event.Duration)
-		assert.Equal(t, 5, event.ToolsUsed)
-		assert.True(t, event.PromiseFound)
 	})
 
 	t.Run("AIResponseEvent", func(t *testing.T) {

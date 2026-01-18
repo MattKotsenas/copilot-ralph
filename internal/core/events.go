@@ -85,19 +85,13 @@ type IterationCompleteEvent struct {
 	Iteration int
 	// Duration is how long the iteration took.
 	Duration time.Duration
-	// ToolsUsed is the number of tools executed.
-	ToolsUsed int
-	// PromiseFound indicates if the promise was found.
-	PromiseFound bool
 }
 
 // NewIterationCompleteEvent creates a new IterationCompleteEvent.
-func NewIterationCompleteEvent(iteration int, duration time.Duration, toolsUsed int, promiseFound bool) *IterationCompleteEvent {
+func NewIterationCompleteEvent(iteration int, duration time.Duration) *IterationCompleteEvent {
 	return &IterationCompleteEvent{
-		Iteration:    iteration,
-		Duration:     duration,
-		ToolsUsed:    toolsUsed,
-		PromiseFound: promiseFound,
+		Iteration: iteration,
+		Duration:  duration,
 	}
 }
 
