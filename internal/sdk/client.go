@@ -420,8 +420,7 @@ func (c *CopilotClient) sendPromptOnce(ctx context.Context, prompt string, event
 // Uses safeEventSender to protect against writing to closed channels.
 func (c *CopilotClient) handleSDKEvent(sdkEvent copilot.SessionEvent, events chan<- Event, responseContent *string, closeDone func(), pendingToolCalls map[string]ToolCall) {
 	switch sdkEvent.Type {
-	case "assistant.message_delta":
-		// Streaming text chunk
+	case "assistant.message_delta", "assistant.reasoning_delta":
 		if sdkEvent.Data.DeltaContent == nil {
 			return
 		}
@@ -430,14 +429,15 @@ func (c *CopilotClient) handleSDKEvent(sdkEvent copilot.SessionEvent, events cha
 		*responseContent += text
 		_ = safeEventSender(events, NewTextEvent(text))
 
-	case "assistant.message":
+	case "assistant.message", "assistant.reasoning":
 		// Complete assistant message
-		if sdkEvent.Data.Content != nil {
-			// Only emit if we haven't already sent the content via deltas
-			if *responseContent == "" {
-				*responseContent = *sdkEvent.Data.Content
-				_ = safeEventSender(events, NewTextEvent(*sdkEvent.Data.Content))
-			}
+		if sdkEvent.Data.Content == nil {
+			return
+		}
+
+		if *responseContent == "" {
+			*responseContent = *sdkEvent.Data.Content
+			_ = safeEventSender(events, NewTextEvent(*sdkEvent.Data.Content))
 		}
 
 	case "tool.execution_start":
