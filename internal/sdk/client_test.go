@@ -246,7 +246,7 @@ func TestCopilotClientConcurrency(t *testing.T) {
 
 func TestEventTypes(t *testing.T) {
 	t.Run("text event", func(t *testing.T) {
-		event := NewTextEvent("hello")
+		event := NewTextEvent("hello", false)
 		assert.Equal(t, EventTypeText, event.Type())
 		assert.Equal(t, "hello", event.Text)
 		assert.WithinDuration(t, time.Now(), event.Timestamp(), time.Second)

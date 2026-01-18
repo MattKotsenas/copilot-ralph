@@ -35,6 +35,7 @@ type Event interface {
 type TextEvent struct {
 	timestamp time.Time
 	Text      string
+	Reasoning bool
 }
 
 // Type returns EventTypeText.
@@ -48,9 +49,10 @@ func (e *TextEvent) Timestamp() time.Time {
 }
 
 // NewTextEvent creates a new TextEvent with the given text.
-func NewTextEvent(text string) *TextEvent {
+func NewTextEvent(text string, reasoning bool) *TextEvent {
 	return &TextEvent{
 		Text:      text,
+		Reasoning: reasoning,
 		timestamp: time.Now(),
 	}
 }

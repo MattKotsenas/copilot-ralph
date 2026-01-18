@@ -417,7 +417,7 @@ func (c *CopilotClient) handleSDKEvent(sdkEvent copilot.SessionEvent, events cha
 			return
 		}
 
-		_ = safeEventSender(events, NewTextEvent(*sdkEvent.Data.DeltaContent))
+		_ = safeEventSender(events, NewTextEvent(*sdkEvent.Data.DeltaContent, strings.Contains(string(sdkEvent.Type), "reasoning")))
 
 	case "assistant.message", "assistant.reasoning":
 		// Complete assistant message
@@ -425,7 +425,7 @@ func (c *CopilotClient) handleSDKEvent(sdkEvent copilot.SessionEvent, events cha
 			return
 		}
 
-		_ = safeEventSender(events, NewTextEvent(*sdkEvent.Data.Content))
+		_ = safeEventSender(events, NewTextEvent(*sdkEvent.Data.Content, strings.Contains(string(sdkEvent.Type), "reasoning")))
 
 	case "tool.execution_start":
 		// Tool execution started - the SDK handles this internally

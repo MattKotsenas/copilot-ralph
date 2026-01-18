@@ -8,7 +8,7 @@ import (
 )
 
 func TestEventTypesAndConstructors(t *testing.T) {
-	te := NewTextEvent("hello")
+	te := NewTextEvent("hello", false)
 	assert.Equal(t, EventTypeText, te.Type())
 	assert.Equal(t, "hello", te.Text)
 	assert.WithinDuration(t, time.Now(), te.Timestamp(), time.Second)

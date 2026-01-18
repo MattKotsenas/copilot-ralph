@@ -9,7 +9,7 @@ import (
 func TestSafeEventSender(t *testing.T) {
 	// Open channel should succeed
 	events := make(chan Event, 1)
-	err := safeEventSender(events, NewTextEvent("hello"))
+	err := safeEventSender(events, NewTextEvent("hello", false))
 	assert.NoError(t, err)
 	// consume
 	recv := <-events
@@ -17,6 +17,6 @@ func TestSafeEventSender(t *testing.T) {
 
 	// Closed channel should return an error (recovered panic)
 	close(events)
-	err = safeEventSender(events, NewTextEvent("world"))
+	err = safeEventSender(events, NewTextEvent("world", false))
 	assert.Error(t, err)
 }

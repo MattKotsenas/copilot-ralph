@@ -85,7 +85,7 @@ const testEventDrainTimeout = 100 * time.Millisecond
 func TestSafeEventSenderOnClosedChannel(t *testing.T) {
 	ch := make(chan Event)
 	close(ch)
-	err := safeEventSender(ch, NewTextEvent("x"))
+	err := safeEventSender(ch, NewTextEvent("x", false))
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "event channel closed")
 }

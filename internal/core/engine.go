@@ -191,8 +191,8 @@ func (e *LoopEngine) executeIteration() error {
 					responseText.WriteString(ev.Text)
 					e.emit(NewAIResponseEvent(ev.Text, iteration))
 
-					// Check for promise in streaming text
-					if detectPromise(ev.Text, e.config.PromisePhrase) {
+					// Check for promise in streaming text that's not reasoning
+					if !ev.Reasoning && detectPromise(ev.Text, e.config.PromisePhrase) {
 						e.emit(NewPromiseDetectedEvent(e.config.PromisePhrase, "ai_response", iteration))
 					}
 

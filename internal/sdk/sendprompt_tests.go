@@ -24,7 +24,7 @@ func TestSendPromptWithRetryCancelledContext(t *testing.T) {
 	// Ensure safeEventSender returns error on closed channel
 	events := make(chan Event, 1)
 	close(events)
-	err = safeEventSender(events, NewTextEvent("x"))
+	err = safeEventSender(events, NewTextEvent("x", false))
 	assert.Error(t, err)
 
 	// Test isRetryableError for wrapped messages

@@ -207,7 +207,7 @@ func (m *MockSDKClient) SendPrompt(ctx context.Context, prompt string) (<-chan s
 			responseText = fmt.Sprintf("%s <promise>%s</promise>", responseText, m.PromisePhrase)
 		}
 
-		events <- sdk.NewTextEvent(responseText)
+		events <- sdk.NewTextEvent(responseText, false)
 
 		// Send any tool calls
 		for _, tc := range m.ToolCalls {
@@ -254,7 +254,7 @@ func (m *SlowMockSDKClient) SendPrompt(ctx context.Context, prompt string) (<-ch
 		default:
 		}
 
-		events <- sdk.NewTextEvent("Slow response")
+		events <- sdk.NewTextEvent("Slow response", false)
 	}()
 
 	return events, nil
