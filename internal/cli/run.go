@@ -325,41 +325,40 @@ func printLoopConfig(cfg *core.LoopConfig) {
 	fmt.Println(ralphStyle.Render(styles.RalphWiggum))
 	fmt.Println()
 
-	fmt.Println(styles.TitleStyle.Render("▶  Starting Ralph Loop"))
+	fmt.Println(styles.TitleStyle.Render("▶ Starting Ralph Loop"))
 	fmt.Println(styles.WarningStyle.Render("Prompt:         ") + cfg.Prompt)
 	fmt.Println(styles.WarningStyle.Render("Model:          ") + cfg.Model)
 	fmt.Println(styles.WarningStyle.Render("Max iterations: ") + fmt.Sprintf("%d", cfg.MaxIterations))
 	fmt.Println(styles.WarningStyle.Render("Timeout:        ") + cfg.Timeout.String())
 	fmt.Println(styles.WarningStyle.Render("Working dir:    ") + cfg.WorkingDir)
-	fmt.Println()
 }
 
 // displayEvents listens for loop events and displays them to stdout.
 func displayEvents(events <-chan any, cfg *core.LoopConfig) {
-	var aiResponseBuffer strings.Builder
-	var lastEvent any
+	// var lastEvent any
+	var newline bool
 
 	for event := range events {
 		switch e := event.(type) {
 		case *core.LoopStartEvent:
-			fmt.Println(styles.PrimaryStyle.Render("▶ Loop started"))
 			fmt.Println()
+			fmt.Print(styles.TitleStyle.Render("▶ Loop started"))
 
 		case *core.IterationStartEvent:
-			fmt.Println(styles.TitleStyle.Render(fmt.Sprintf("━━━ Iteration %d/%d ━━━",
-				e.Iteration, cfg.MaxIterations)))
+			fmt.Println()
+			fmt.Println(styles.SubTitleStyle.Render(fmt.Sprintf("━━━ Iteration %d/%d ━━━", e.Iteration, cfg.MaxIterations)))
+			fmt.Println()
 
 		case *core.AIResponseEvent:
-			// Accumulate AI response text
-			aiResponseBuffer.WriteString(e.Text)
 			// Print as we receive it for streaming effect
 			fmt.Print(e.Text)
 
 		case *core.ToolExecutionStartEvent:
 			// Print newline if previous event was AI response
-			if _, ok := lastEvent.(*core.AIResponseEvent); ok {
+			if newline {
 				fmt.Println()
 			}
+
 			fmt.Println(styles.InfoStyle.Render(e.Info("🛠️")))
 
 		case *core.ToolExecutionEvent:
@@ -372,24 +371,26 @@ func displayEvents(events <-chan any, cfg *core.LoopConfig) {
 
 		case *core.IterationCompleteEvent:
 			// Print newline if previous event was AI response
-			if _, ok := lastEvent.(*core.AIResponseEvent); ok {
+			if newline {
 				fmt.Println()
 			}
+
 			fmt.Println(styles.InfoStyle.Render(fmt.Sprintf("✓ Iteration %d complete", e.Iteration)))
-			aiResponseBuffer.Reset() // Clear buffer for next iteration
 
 		case *core.PromiseDetectedEvent:
 			// Print newline if previous event was AI response
-			if _, ok := lastEvent.(*core.AIResponseEvent); ok {
+			if newline {
 				fmt.Println()
 			}
+
 			fmt.Println(styles.SuccessStyle.Render(fmt.Sprintf("🎉 Promise detected: \"%s\"", e.Phrase)))
 
 		case *core.ErrorEvent:
 			// Print newline if previous event was AI response
-			if _, ok := lastEvent.(*core.AIResponseEvent); ok {
+			if newline {
 				fmt.Println()
 			}
+
 			fmt.Println(styles.ErrorStyle.Render(fmt.Sprintf("✗ Error: %v", e.Error)))
 
 		case *core.LoopCompleteEvent:
@@ -402,15 +403,15 @@ func displayEvents(events <-chan any, cfg *core.LoopConfig) {
 
 		case *core.LoopCancelledEvent:
 			// Print newline if previous event was AI response
-			if _, ok := lastEvent.(*core.AIResponseEvent); ok {
+			if newline {
 				fmt.Println()
 			}
+
 			fmt.Println(styles.WarningStyle.Render("⚠ Loop cancelled"))
 			return
 		}
 
-		// Store current event as last event for next iteration
-		lastEvent = event
+		_, newline = event.(*core.AIResponseEvent)
 	}
 }
 
@@ -419,8 +420,7 @@ func printSummary(result *core.LoopResult, startTime time.Time) {
 	duration := time.Since(startTime)
 
 	fmt.Println()
-	fmt.Println(styles.PrimaryStyle.Render("📊 Loop Summary"))
-	fmt.Println()
+	fmt.Println(styles.TitleStyle.Render("📊 Loop Summary"))
 
 	// Status with color
 	var status string

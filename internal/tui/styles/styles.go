@@ -29,8 +29,8 @@ var (
 
 // Message styles
 var (
-	// PrimaryStyle for primary text.
-	PrimaryStyle = lipgloss.NewStyle().Foreground(Primary)
+	// SubTitleStyle for primary text.
+	SubTitleStyle = lipgloss.NewStyle().Foreground(Primary)
 	// InfoStyle for informational messages.
 	InfoStyle = lipgloss.NewStyle().Foreground(Info)
 	// SuccessStyle for success messages.

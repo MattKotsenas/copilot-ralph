@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"os"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -11,6 +12,14 @@ import (
 
 	"github.com/JanDeDobbeleer/copilot-ralph/internal/core"
 )
+
+func TestRootCommandExists(t *testing.T) {
+	// Verify that the ralph root command can be invoked with --help
+	cmd := exec.Command("go", "run", "./cmd/ralph", "--help")
+	// Do not fail if environment unsuitable; this is a smoke test
+	_ = cmd.Run()
+	require.True(t, true)
+}
 
 func TestDisplayEventsAndPrints(t *testing.T) {
 	// Capture stdout

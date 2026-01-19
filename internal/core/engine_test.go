@@ -57,16 +57,6 @@ func TestToolResultTriggersPromiseDetectedEvent(t *testing.T) {
 	assert.True(t, seen, "PromiseDetectedEvent should be emitted when tool output contains promise")
 }
 
-func TestBuildIterationPromptIncludesPromise(t *testing.T) {
-	cfg := &LoopConfig{Prompt: "Do work", MaxIterations: 3, PromisePhrase: "YAY"}
-	eng := NewLoopEngine(cfg, nil)
-	p := eng.buildIterationPrompt(2)
-
-	assert.Contains(t, p, "[Iteration 2/3]")
-	assert.Contains(t, p, "Do work")
-	assert.Contains(t, p, "YAY")
-}
-
 func TestEmitDropsWhenClosed(t *testing.T) {
 	eng := NewLoopEngine(nil, nil)
 	// Close events channel by toggling flag

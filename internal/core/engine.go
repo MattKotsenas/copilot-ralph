@@ -165,8 +165,6 @@ func (e *LoopEngine) executeIteration() error {
 	// Build context and send prompt
 	prompt := e.buildIterationPrompt(iteration)
 
-	var responseText strings.Builder
-
 	// If SDK is available, send prompt
 	if e.sdk != nil {
 		events, err := e.sdk.SendPrompt(e.ctx, prompt)
@@ -188,7 +186,6 @@ func (e *LoopEngine) executeIteration() error {
 
 				switch ev := event.(type) {
 				case *sdk.TextEvent:
-					responseText.WriteString(ev.Text)
 					e.emit(NewAIResponseEvent(ev.Text, iteration))
 
 					// Check for promise in streaming text that's not reasoning
