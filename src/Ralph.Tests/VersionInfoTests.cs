@@ -8,45 +8,40 @@ namespace Ralph.Tests;
 public sealed class VersionInfoTests
 {
     [TestMethod]
-    public void Get_ReturnsSetValues()
+    public void Get_ReturnsVersionInfo()
     {
-        // Arrange
-        var oldVersion = AppVersion.Version;
-        var oldCommit = AppVersion.Commit;
-        var oldBuildDate = AppVersion.BuildDate;
-        var oldDotNetVersion = AppVersion.DotNetVersion;
+        // Act
+        var info = AppVersion.Get();
 
-        try
-        {
-            AppVersion.Version = "1.2.3";
-            AppVersion.Commit = "abc123";
-            AppVersion.BuildDate = "2026-01-01";
-            AppVersion.DotNetVersion = "10.0.0";
-
-            // Act
-            var info = AppVersion.Get();
-
-            // Assert
-            Assert.AreEqual("1.2.3", info.Version);
-            Assert.AreEqual("abc123", info.Commit);
-            Assert.AreEqual("2026-01-01", info.BuildDate);
-            Assert.AreEqual("10.0.0", info.DotNetVersion);
-        }
-        finally
-        {
-            AppVersion.Version = oldVersion;
-            AppVersion.Commit = oldCommit;
-            AppVersion.BuildDate = oldBuildDate;
-            AppVersion.DotNetVersion = oldDotNetVersion;
-        }
+        // Assert - values come from ThisAssembly via nbgv
+        Assert.IsNotNull(info.Version);
+        Assert.IsNotNull(info.Commit);
+        Assert.IsNotNull(info.BuildDate);
+        Assert.IsNotNull(info.DotNetVersion);
     }
 
     [TestMethod]
-    public void Get_DefaultValues_ReturnsDevVersion()
+    public void Version_IsNotEmpty()
     {
-        // The default version should be "dev" unless overridden at build time
-        var info = AppVersion.Get();
-        Assert.IsNotNull(info.Version);
-        Assert.IsNotNull(info.DotNetVersion);
+        Assert.IsFalse(string.IsNullOrEmpty(AppVersion.Version));
+    }
+
+    [TestMethod]
+    public void Commit_IsNotEmpty()
+    {
+        Assert.IsFalse(string.IsNullOrEmpty(AppVersion.Commit));
+    }
+
+    [TestMethod]
+    public void BuildDate_IsValidDate()
+    {
+        var buildDate = AppVersion.BuildDate;
+        Assert.IsTrue(DateTime.TryParse(buildDate, out _), $"BuildDate '{buildDate}' is not a valid date");
+    }
+
+    [TestMethod]
+    public void DotNetVersion_MatchesRuntime()
+    {
+        Assert.AreEqual(Environment.Version.ToString(), AppVersion.DotNetVersion);
     }
 }

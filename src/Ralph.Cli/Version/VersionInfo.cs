@@ -1,5 +1,5 @@
 // Version information for Ralph.
-// Version information is set at build time using MSBuild properties.
+// Version information is provided by Nerdbank.GitVersioning via ThisAssembly.
 
 namespace Ralph.Cli.Version;
 
@@ -14,21 +14,21 @@ public sealed record VersionInfo(
 );
 
 /// <summary>
-/// Provides access to version information.
+/// Provides access to version information using Nerdbank.GitVersioning.
 /// </summary>
 public static class AppVersion
 {
     /// <summary>The semantic version number.</summary>
-    public static string Version { get; set; } = "dev";
+    public static string Version => ThisAssembly.AssemblyInformationalVersion;
 
     /// <summary>The git commit hash.</summary>
-    public static string Commit { get; set; } = "unknown";
+    public static string Commit => ThisAssembly.GitCommitId;
 
-    /// <summary>The build timestamp.</summary>
-    public static string BuildDate { get; set; } = "unknown";
+    /// <summary>The git commit date.</summary>
+    public static string BuildDate => ThisAssembly.GitCommitDate.ToString("yyyy-MM-dd");
 
-    /// <summary>The .NET version used to build.</summary>
-    public static string DotNetVersion { get; set; } = Environment.Version.ToString();
+    /// <summary>The .NET version used at runtime.</summary>
+    public static string DotNetVersion => Environment.Version.ToString();
 
     /// <summary>
     /// Gets the version information.

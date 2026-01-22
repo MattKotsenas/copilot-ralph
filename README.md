@@ -31,11 +31,15 @@
 
 Iterative AI Development Loop Tool
 
-Ralph implements the "Ralph Wiggum" technique for self-referential AI development loops using GitHub Copilot. It continuously feeds prompts to AI, monitoring for completion signals, with each iteration building on previous work until the task is done.
+Ralph implements the "Ralph Wiggum" technique for self-referential AI development loops using GitHub Copilot. It
+continuously feeds prompts to AI, monitoring for completion signals, with each iteration building on previous work until
+the task is done.
+
+This is a C# port of the original [copilot-ralph](https://github.com/JanDeDobbeleer/copilot-ralph) by Jan De Dobbeleer.
 
 > [!IMPORTANT]
-> This is a C# port of the original [copilot-ralph](https://github.com/JanDeDobbeleer/copilot-ralph) by Jan De Dobbeleer.
-> While Ralph works, it's highly experimental. Feel free to use it or as inspiration on how to integrate with AI development loops.
+> While Ralph works, it's highly experimental. Feel free to use it or as inspiration on how to integrate with AI
+> development loops.
 
 ## Features
 
@@ -109,10 +113,10 @@ ralph run \
 └──────┬───────┘
        │
        v
-┌──────────────────┐      ┌────────────────┐
-│  SDK Client      │─────>│  Copilot AI    │
+┌──────────────────┐      ┌─────────────────┐
+│  SDK Client      │─────>│  Copilot AI     │
 │  Loop Engine     │      │  (per iteration)│
-└──────┬───────────┘      └────────┬───────┘
+└──────┬───────────┘      └────────┬────────┘
        │                           │
        v                           v
 ┌──────────────────┐      ┌────────────────┐
@@ -257,7 +261,3 @@ MIT License - see [LICENSE](./LICENSE) for details
 - Inspired by the [Ralph Wiggum plugin](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum) for Claude
 - Built with [GitHub Copilot SDK](https://github.com/github/copilot-sdk)
 - Console UI powered by [Spectre.Console](https://spectreconsole.net/)
-
-## Project Status
-
-🚧 **Early Development** - Ralph is in active development. Core features are being implemented.
