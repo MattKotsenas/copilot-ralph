@@ -17,7 +17,7 @@
 ⢰⣄⠀⠀⠀⠉⠳⠦⣤⣤⡤⠴⠖⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢯⣆⠀⠀⠀
 ⢸⣉⠉⠓⠲⢦⣤⣄⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣠⣼⢹⡄⠀⠀
 ⠘⡍⠙⠒⠶⢤⣄⣈⣉⡉⠉⠉⠛⠛⠛⠛⠛⠛⢻⠉⠉⠉⢙⣏⣁⣸⠇⡇⠀⠀
-⠀⢣⠀⠀⠀⠀⠀⠀⠉⠉⠉⠙⠛⠛⠛⠛⠛⠛⠛⠒⠒⠒⠋⠉⠀⠸⠚⢇⠀⠀
+⠀⢣⠀⠀⠀⠀⠀⠀⠉⠉≠⠙⠛⠛⠛⠛⠛⠛⠛⠒⠒⠒⠋⠉⠀⠸⠚⢇⠀⠀
 ⠀⠀⢧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠇⢤⣨⠇⠀
 ⠀⠀⠀⢧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣤⢻⡀⣸⠀⠀⠀
 ⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⠛⠉⠁⠀⠀⠀
@@ -34,30 +34,36 @@ Iterative AI Development Loop Tool
 Ralph implements the "Ralph Wiggum" technique for self-referential AI development loops using GitHub Copilot. It continuously feeds prompts to AI, monitoring for completion signals, with each iteration building on previous work until the task is done.
 
 > [!IMPORTANT]
-> While ralph works, he's highly experimental. I built this primarily to understand how to embed the Copilot CLI SDK. Feel free to use it,
-> or as inspiration on how to integrate with the Copilot CLI SDK.
+> This is a C# port of the original [copilot-ralph](https://github.com/JanDeDobbeleer/copilot-ralph) by Jan De Dobbeleer.
+> While Ralph works, it's highly experimental. Feel free to use it or as inspiration on how to integrate with AI development loops.
 
 ## Features
 
 ✨ **Iterative AI Loops** - Run multiple AI iterations until task completion
 ⚙️ **Flexible Configuration** - Configure loops via command-line flags
 🤖 **GitHub Copilot Integration** - Powered by GitHub Copilot SDK
- **Real-time Event Streaming** - Watch iteration progress and tool execution🛠️ **Tool Execution** - AI can read files, run commands, and make changes
-⏱️ **Timeout Controls** - Prevent runaway loops with safety limits🛠️ **Tool Execution** - AI can read files, run commands, and make changes
+📡 **Real-time Event Streaming** - Watch iteration progress and tool execution
+🛠️ **Tool Execution** - AI can read files, run commands, and make changes
 ⏱️ **Timeout Controls** - Prevent runaway loops with safety limits
 
 ## Quick Start
 
+### Prerequisites
+
+- .NET 10.0 or later
+- GitHub Copilot access
+- Git
+
 ### Installation
 
 ```bash
-# From source (requires Go 1.22+)
-go install github.com/JanDeDobbeleer/copilot-ralph/cmd/ralph@latest
+# Build from source
+git clone https://github.com/your-username/copilot-ralph.git
+cd copilot-ralph/src
+dotnet build
 
-# Or build from source
-git clone https://github.com/JanDeDobbeleer/copilot-ralph.git
-cd copilot-ralph
-make build
+# Run
+dotnet run --project Ralph.Cli -- run "Your task here"
 ```
 
 ### Usage
@@ -146,7 +152,7 @@ ralph run --dry-run "Refactor database layer"
 
 # With custom system message
 ralph run \
-  --system-prompt "You are an expert Go developer" \
+  --system-prompt "You are an expert C# developer" \
   --system-prompt-mode replace \
   "Optimize the code"
 ```
@@ -170,6 +176,7 @@ Show version information.
 
 ```bash
 ralph version
+ralph version --short
 ```
 
 ## Configuration
@@ -192,29 +199,22 @@ Run `ralph run --help` for all available options.
 
 ## Development
 
-### Prerequisites
-
-- Go 1.24 or later
-- GitHub Copilot access
-- Git
-
 ### Building
 
 ```bash
-# Install dependencies
-go mod download
+cd src
+
+# Restore dependencies
+dotnet restore
 
 # Build
-make build
+dotnet build
 
 # Run tests
-make test
+dotnet test
 
-# Run linter
-make lint
-
-# All checks (tidy, lint, test, build)
-make all
+# Run the CLI
+dotnet run --project Ralph.Cli -- version
 ```
 
 ## Architecture
@@ -222,31 +222,30 @@ make all
 Ralph is organized into distinct layers:
 
 ```text
-CLI Layer (cmd/ralph, internal/cli)
-    │ Commands, flags, validation
-    ↓
-TUI Layer (internal/tui)
-    │ Terminal UI, user interaction
-    ↓
-Core Layer (internal/core)
-    │ Loop engine, business logic
-    ↓
-SDK Layer (internal/sdk)
-    │ Copilot integration
-    ↓
-GitHub Copilot API
+src/
+├── Ralph.Cli/              # Main application
+│   ├── Commands/           # CLI commands (ConsoleAppFramework)
+│   ├── Core/               # Loop engine, events, config
+│   ├── Sdk/                # Copilot SDK wrapper
+│   ├── Styles/             # Console styles (Spectre.Console)
+│   └── Version/            # Version information
+└── Ralph.Tests/            # MSTest v2 tests
 ```
 
-See [AGENTS.md](./AGENTS.md) for detailed architecture documentation.
+### Technology Stack
+
+- **CLI Framework**: [ConsoleAppFramework](https://github.com/Cysharp/ConsoleAppFramework)
+- **Console Rendering**: [Spectre.Console](https://spectreconsole.net/)
+- **Testing**: MSTest with Microsoft Testing Platform v2
+- **Target Framework**: .NET 10.0
 
 ## Contributing
 
 Contributions are welcome! Please:
 
-1. Read [AGENTS.md](./AGENTS.md) for development guidelines
-2. Follow the spec-driven development approach
-3. Ensure tests pass and code is formatted
-4. Submit a pull request with clear description
+1. Ensure tests pass with `dotnet test`
+2. Follow existing code style
+3. Submit a pull request with clear description
 
 ## License
 
@@ -254,15 +253,11 @@ MIT License - see [LICENSE](./LICENSE) for details
 
 ## Acknowledgments
 
+- **Original Implementation**: [copilot-ralph](https://github.com/JanDeDobbeleer/copilot-ralph) by [Jan De Dobbeleer](https://github.com/JanDeDobbeleer)
 - Inspired by the [Ralph Wiggum plugin](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum) for Claude
 - Built with [GitHub Copilot SDK](https://github.com/github/copilot-sdk)
-- UI powered by [Charm Bracelet](https://github.com/charmbracelet) tools
+- Console UI powered by [Spectre.Console](https://spectreconsole.net/)
 
 ## Project Status
 
 🚧 **Early Development** - Ralph is in active development. Core features are being implemented.
-
-## Support
-
-- **Issues:** [GitHub Issues](https://github.com/JanDeDobbeleer/copilot-ralph/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/JanDeDobbeleer/copilot-ralph/discussions)

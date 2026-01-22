@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Ralph.Cli/Ralph.Cli.csproj" />
+  <Project Path="Ralph.Tests/Ralph.Tests.csproj" />
+</Solution>
