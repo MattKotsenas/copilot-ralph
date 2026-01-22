@@ -1,6 +1,7 @@
 // Copilot SDK client wrapper.
 
 using System.Threading.Channels;
+using GitHub.Copilot.SDK;
 
 namespace Ralph.Cli.Sdk;
 
@@ -35,7 +36,7 @@ public interface ICopilotClient
 /// Wraps the GitHub Copilot SDK.
 /// Provides session management, event handling, and tool registration.
 /// </summary>
-public sealed class CopilotClient : ICopilotClient
+public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
 {
     public const string DefaultModel = "gpt-4";
     public const string DefaultLogLevel = "info";
@@ -49,8 +50,9 @@ public sealed class CopilotClient : ICopilotClient
     ];
 
     private readonly ClientConfig _config;
+    private GitHub.Copilot.SDK.CopilotClient? _client;
+    private CopilotSession? _session;
     private bool _started;
-    private bool _hasSession;
 
     public string Model => _config.Model;
 
@@ -65,44 +67,88 @@ public sealed class CopilotClient : ICopilotClient
             throw new ArgumentException("Timeout must be positive");
     }
 
-    public Task StartAsync(CancellationToken cancellationToken = default)
+    public async Task StartAsync(CancellationToken cancellationToken = default)
     {
         if (_started)
-            return Task.CompletedTask;
+            return;
 
-        // In a real implementation, this would start the SDK client
+        var options = new CopilotClientOptions
+        {
+            LogLevel = _config.LogLevel,
+            Cwd = _config.WorkingDir
+        };
+
+        _client = new GitHub.Copilot.SDK.CopilotClient(options);
+        await _client.StartAsync();
         _started = true;
-        return Task.CompletedTask;
     }
 
-    public Task StopAsync()
+    public async Task StopAsync()
     {
-        if (!_started)
-            return Task.CompletedTask;
+        if (!_started || _client == null)
+            return;
 
-        _hasSession = false;
-        _started = false;
-        return Task.CompletedTask;
+        try
+        {
+            await _client.StopAsync();
+        }
+        catch
+        {
+            // Ignore errors during cleanup
+        }
+        finally
+        {
+            _client = null;
+            _session = null;
+            _started = false;
+        }
     }
 
-    public Task CreateSessionAsync(CancellationToken cancellationToken = default)
+    public async Task CreateSessionAsync(CancellationToken cancellationToken = default)
     {
-        if (!_started)
+        if (!_started || _client == null)
             throw new InvalidOperationException("SDK client not started");
 
-        _hasSession = true;
-        return Task.CompletedTask;
+        var systemMessageConfig = string.IsNullOrEmpty(_config.SystemMessage)
+            ? null
+            : new SystemMessageConfig
+            {
+                Mode = _config.SystemMessageMode.Equals("replace", StringComparison.OrdinalIgnoreCase)
+                    ? SystemMessageMode.Replace
+                    : SystemMessageMode.Append,
+                Content = _config.SystemMessage
+            };
+
+        _session = await _client.CreateSessionAsync(new SessionConfig
+        {
+            Model = _config.Model,
+            Streaming = _config.Streaming,
+            SystemMessage = systemMessageConfig
+        });
     }
 
-    public Task DestroySessionAsync(CancellationToken cancellationToken = default)
+    public async Task DestroySessionAsync(CancellationToken cancellationToken = default)
     {
-        _hasSession = false;
-        return Task.CompletedTask;
+        if (_session != null)
+        {
+            try
+            {
+                await _session.DisposeAsync();
+            }
+            catch
+            {
+                // Ignore errors during cleanup
+            }
+            finally
+            {
+                _session = null;
+            }
+        }
     }
 
     public ChannelReader<IEvent> SendPromptAsync(string prompt, CancellationToken cancellationToken = default)
     {
-        if (!_hasSession)
+        if (_session == null)
             throw new InvalidOperationException("No active session");
 
         var channel = Channel.CreateBounded<IEvent>(100);
@@ -164,10 +210,102 @@ public sealed class CopilotClient : ICopilotClient
 
     private async Task SendPromptOnceAsync(string prompt, ChannelWriter<IEvent> writer, CancellationToken cancellationToken)
     {
-        // In a real implementation, this would send to the SDK and stream events
-        // For now, just complete the channel as a stub
-        await Task.CompletedTask;
-        writer.Complete();
+        if (_session == null)
+        {
+            writer.Complete();
+            return;
+        }
+
+        var done = new TaskCompletionSource();
+
+        // Register cancellation
+        await using var registration = cancellationToken.Register(() => done.TrySetCanceled());
+
+        using var subscription = _session.On(evt =>
+        {
+            try
+            {
+                switch (evt)
+                {
+                    case AssistantMessageDeltaEvent delta:
+                        // Streaming text chunk
+                        writer.TryWrite(new TextEvent { Text = delta.Data.DeltaContent ?? "", Reasoning = false });
+                        break;
+
+                    case AssistantReasoningDeltaEvent reasoningDelta:
+                        // Streaming reasoning chunk
+                        writer.TryWrite(new TextEvent { Text = reasoningDelta.Data.DeltaContent ?? "", Reasoning = true });
+                        break;
+
+                    case AssistantMessageEvent msg:
+                        // Final complete message (when not streaming, or as final event)
+                        if (!_config.Streaming)
+                        {
+                            writer.TryWrite(new TextEvent { Text = msg.Data.Content ?? "", Reasoning = false });
+                        }
+                        break;
+
+                    case ToolExecutionStartEvent toolStart:
+                        writer.TryWrite(new ToolCallEvent
+                        {
+                            ToolCall = new ToolCall
+                            {
+                                Id = toolStart.Data.ToolCallId,
+                                Name = toolStart.Data.ToolName,
+                                Parameters = toolStart.Data.Arguments != null
+                                    ? new Dictionary<string, object?> { ["arguments"] = toolStart.Data.Arguments }
+                                    : []
+                            }
+                        });
+                        break;
+
+                    case ToolExecutionCompleteEvent toolComplete:
+                        writer.TryWrite(new ToolResultEvent
+                        {
+                            ToolCall = new ToolCall
+                            {
+                                Id = toolComplete.Data.ToolCallId,
+                                Name = "tool", // Not available in complete event
+                            },
+                            Result = toolComplete.Data.Result?.Content ?? "",
+                            Error = toolComplete.Data.Error != null
+                                ? new Exception(toolComplete.Data.Error.Message)
+                                : null
+                        });
+                        break;
+
+                    case SessionErrorEvent errorEvent:
+                        writer.TryWrite(new ErrorEvent
+                        {
+                            Error = new Exception(errorEvent.Data.Message ?? "Unknown error")
+                        });
+                        break;
+
+                    case SessionIdleEvent:
+                        // Session finished processing
+                        done.TrySetResult();
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                writer.TryWrite(new ErrorEvent { Error = ex });
+            }
+        });
+
+        try
+        {
+            await _session.SendAsync(new MessageOptions { Prompt = prompt });
+            await done.Task;
+        }
+        catch (OperationCanceledException)
+        {
+            // Cancellation is expected
+        }
+        finally
+        {
+            writer.Complete();
+        }
     }
 
     private static bool IsRetryableError(Exception ex)
@@ -179,5 +317,11 @@ public sealed class CopilotClient : ICopilotClient
             || message.Contains("connection terminated", StringComparison.OrdinalIgnoreCase)
             || message.Contains("EOF", StringComparison.OrdinalIgnoreCase)
             || message.Contains("timeout", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DestroySessionAsync();
+        await StopAsync();
     }
 }
