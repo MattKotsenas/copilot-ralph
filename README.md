@@ -60,13 +60,49 @@ This is a C# port of the original [copilot-ralph](https://github.com/JanDeDobbel
 
 ### Installation
 
-```bash
-# Build from source
-git clone https://github.com/your-username/copilot-ralph.git
-cd copilot-ralph/src
-dotnet build
+Ralph is distributed as a .NET tool. You can install it globally from a local build:
 
-# Run
+```powershell
+# Clone and build
+git clone https://github.com/mattkotsenas/copilot-ralph.git
+cd copilot-ralph/src
+
+# Build and pack in Release mode
+dotnet pack Ralph.Cli -c Release
+
+# Install as a global tool from the local package
+dotnet tool install --global Ralph.Cli `
+  --add-source ..\artifacts\package\release
+```
+
+After installation, the `ralph` command will be available globally.
+
+### Upgrading
+
+After making changes to the code, rebuild and reinstall:
+
+```powershell
+# Rebuild
+cd src
+dotnet pack Ralph.Cli -c Release
+
+# Update the tool
+dotnet tool update --global Ralph.Cli `
+  --add-source ..\artifacts\package\release
+```
+
+### Uninstalling
+
+```powershell
+dotnet tool uninstall --global Ralph.Cli
+```
+
+### Running from Source
+
+You can also run directly from source without installing:
+
+```powershell
+cd src
 dotnet run --project Ralph.Cli -- run "Your task here"
 ```
 
@@ -205,7 +241,7 @@ Run `ralph run --help` for all available options.
 
 ### Building
 
-```bash
+```powershell
 cd src
 
 # Restore dependencies
@@ -217,8 +253,12 @@ dotnet build
 # Run tests
 dotnet test
 
-# Run the CLI
+# Run the CLI directly
 dotnet run --project Ralph.Cli -- version
+
+# Build and pack for distribution
+dotnet pack Ralph.Cli -c Release
+# Output: artifacts/package/release/Ralph.Cli.{version}.nupkg
 ```
 
 ## Architecture

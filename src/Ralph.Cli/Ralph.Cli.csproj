@@ -5,6 +5,17 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    
+    <!-- Make this a dotnet tool -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>ralph</ToolCommandName>
+    <PackageId>Ralph.Cli</PackageId>
+    <Description>Ralph - An iterative AI development loop tool using GitHub Copilot</Description>
+    <Authors>Jan De Dobbeleer</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/JanDeDobbeleer/copilot-ralph</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/JanDeDobbeleer/copilot-ralph</RepositoryUrl>
+    <PackageTags>copilot;ai;cli;development</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

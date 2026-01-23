@@ -291,10 +291,14 @@ public class RootCommands
         AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Max iterations:    ")}{config.MaxIterations}");
         AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Timeout:           ")}{config.Timeout}");
         AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Promise phrase:    ")}{config.PromisePhrase}");
-        AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Working directory: ")}{config.WorkingDir}");
+        
+        var absoluteWorkingDir = Path.GetFullPath(config.WorkingDir);
+        AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Working directory: ")}{absoluteWorkingDir}");
 
-        var dirs = allowedDirectories?.Length > 0 ? string.Join(", ", allowedDirectories) : config.WorkingDir;
-        AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Allowed dirs:      ")}{dirs}");
+        var absoluteDirs = allowedDirectories?.Length > 0 
+            ? string.Join(", ", allowedDirectories.Select(Path.GetFullPath)) 
+            : absoluteWorkingDir;
+        AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Allowed dirs:      ")}{absoluteDirs}");
 
         if (availableTools != null)
         {
@@ -324,10 +328,14 @@ public class RootCommands
         AnsiConsole.MarkupLine($"{ConsoleStyles.WarningText("Model:          ")}{config.Model}");
         AnsiConsole.MarkupLine($"{ConsoleStyles.WarningText("Max iterations: ")}{config.MaxIterations}");
         AnsiConsole.MarkupLine($"{ConsoleStyles.WarningText("Timeout:        ")}{config.Timeout}");
-        AnsiConsole.MarkupLine($"{ConsoleStyles.WarningText("Working dir:    ")}{config.WorkingDir}");
+        
+        var absoluteWorkingDir = Path.GetFullPath(config.WorkingDir);
+        AnsiConsole.MarkupLine($"{ConsoleStyles.WarningText("Working dir:    ")}{absoluteWorkingDir}");
 
-        var dirs = allowedDirectories?.Length > 0 ? string.Join(", ", allowedDirectories) : config.WorkingDir;
-        AnsiConsole.MarkupLine($"{ConsoleStyles.WarningText("Allowed dirs:   ")}{dirs}");
+        var absoluteDirs = allowedDirectories?.Length > 0 
+            ? string.Join(", ", allowedDirectories.Select(Path.GetFullPath)) 
+            : absoluteWorkingDir;
+        AnsiConsole.MarkupLine($"{ConsoleStyles.WarningText("Allowed dirs:   ")}{absoluteDirs}");
 
         if (availableTools != null)
         {
