@@ -1,5 +1,6 @@
 // Tests for SDK client.
 
+using Ralph.Cli.Core;
 using Ralph.Cli.Sdk;
 
 namespace Ralph.Tests;
@@ -17,7 +18,7 @@ public sealed class CopilotClientTests
     {
         var config = new ClientConfig();
 
-        Assert.AreEqual(CopilotClient.DefaultModel, config.Model);
+        Assert.AreEqual(LoopConfig.DefaultModel, config.Model);
         Assert.AreEqual(CopilotClient.DefaultLogLevel, config.LogLevel);
         Assert.AreEqual(".", config.WorkingDir);
         Assert.AreEqual(string.Empty, config.SystemMessage);

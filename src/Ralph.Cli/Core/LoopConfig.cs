@@ -1,5 +1,3 @@
-// Loop configuration and state types.
-
 namespace Ralph.Cli.Core;
 
 /// <summary>
@@ -19,9 +17,14 @@ public enum LoopState
 /// </summary>
 public sealed class LoopConfig
 {
+    /// <summary>
+    /// The default AI model to use.
+    /// </summary>
+    public const string DefaultModel = "claude-opus-4-5";
+
     public string Prompt { get; set; } = string.Empty;
     public string PromisePhrase { get; set; } = "I'm special!";
-    public string Model { get; set; } = "gpt-4";
+    public string Model { get; set; } = DefaultModel;
     public string WorkingDir { get; set; } = ".";
     public int MaxIterations { get; set; } = 10;
     public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(30);

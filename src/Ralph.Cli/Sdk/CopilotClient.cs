@@ -1,6 +1,7 @@
 // Copilot SDK client wrapper.
 
 using System.Threading.Channels;
+using Ralph.Cli.Core;
 using SdkClient = GitHub.Copilot.SDK.CopilotClient;
 using GitHub.Copilot.SDK;
 
@@ -11,7 +12,7 @@ namespace Ralph.Cli.Sdk;
 /// </summary>
 public sealed class ClientConfig
 {
-    public string Model { get; set; } = CopilotClient.DefaultModel;
+    public string Model { get; set; } = LoopConfig.DefaultModel;
     public string LogLevel { get; set; } = CopilotClient.DefaultLogLevel;
     public string WorkingDir { get; set; } = ".";
     public string SystemMessage { get; set; } = string.Empty;
@@ -55,7 +56,6 @@ public interface ICopilotClient
 /// </summary>
 public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
 {
-    public const string DefaultModel = "gpt-4";
     public const string DefaultLogLevel = "info";
     public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
 
@@ -546,7 +546,7 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
                         }
                         break;
 
-                    case ToolExecutionStartEvent toolStart:
+                    case GitHub.Copilot.SDK.ToolExecutionStartEvent toolStart:
                         writer.TryWrite(new ToolCallEvent
                         {
                             ToolCall = new ToolCall

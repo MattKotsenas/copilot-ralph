@@ -15,7 +15,7 @@ public sealed class LoopConfigTests
         Assert.AreEqual(10, config.MaxIterations);
         Assert.AreEqual(TimeSpan.FromMinutes(30), config.Timeout);
         Assert.AreEqual("I'm special!", config.PromisePhrase);
-        Assert.AreEqual("gpt-4", config.Model);
+        Assert.AreEqual(LoopConfig.DefaultModel, config.Model);
         Assert.AreEqual(".", config.WorkingDir);
         Assert.IsFalse(config.DryRun);
     }

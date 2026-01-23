@@ -29,7 +29,7 @@ public class RootCommands
     /// <param name="maxIterations">-m, Maximum loop iterations</param>
     /// <param name="timeout">-t, Maximum loop runtime (e.g., 30m, 1h)</param>
     /// <param name="promise">Completion promise phrase</param>
-    /// <param name="model">AI model to use</param>
+    /// <param name="model">AI model to use (default: claude-opus-4-5)</param>
     /// <param name="workingDir">Working directory for loop execution</param>
     /// <param name="dryRun">Show what would be executed without running</param>
     /// <param name="streaming">Enable streaming responses</param>
@@ -47,7 +47,7 @@ public class RootCommands
         int maxIterations = 10,
         string timeout = "30m",
         string promise = "I'm special!",
-        string model = "gpt-4",
+        string? model = null,
         string workingDir = ".",
         bool dryRun = false,
         bool streaming = true,
@@ -96,7 +96,7 @@ public class RootCommands
             MaxIterations = maxIterations,
             Timeout = timeoutDuration,
             PromisePhrase = promise,
-            Model = model,
+            Model = model ?? LoopConfig.DefaultModel,
             WorkingDir = workingDir,
             DryRun = dryRun
         };
