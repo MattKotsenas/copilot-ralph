@@ -65,14 +65,14 @@ Ralph is distributed as a .NET tool. You can install it globally from a local bu
 ```powershell
 # Clone and build
 git clone https://github.com/mattkotsenas/copilot-ralph.git
-cd copilot-ralph/src
+cd copilot-ralph
 
 # Build and pack in Release mode
-dotnet pack Ralph.Cli -c Release
+dotnet pack src/Ralph.Cli -c Release
 
 # Install as a global tool from the local package
 dotnet tool install --global Ralph.Cli `
-  --add-source ..\artifacts\package\release
+  --add-source ./artifacts/package/release
 ```
 
 After installation, the `ralph` command will be available globally.
@@ -83,12 +83,11 @@ After making changes to the code, rebuild and reinstall:
 
 ```powershell
 # Rebuild
-cd src
-dotnet pack Ralph.Cli -c Release
+dotnet pack src/Ralph.Cli -c Release
 
 # Update the tool
 dotnet tool update --global Ralph.Cli `
-  --add-source ..\artifacts\package\release
+  --add-source ./artifacts/package/release
 ```
 
 ### Uninstalling
@@ -102,8 +101,7 @@ dotnet tool uninstall --global Ralph.Cli
 You can also run directly from source without installing:
 
 ```powershell
-cd src
-dotnet run --project Ralph.Cli -- run "Your task here"
+dotnet run --project src/Ralph.Cli -- run "Your task here"
 ```
 
 ### Usage
@@ -242,8 +240,6 @@ Run `ralph run --help` for all available options.
 ### Building
 
 ```powershell
-cd src
-
 # Restore dependencies
 dotnet restore
 
@@ -254,11 +250,26 @@ dotnet build
 dotnet test
 
 # Run the CLI directly
-dotnet run --project Ralph.Cli -- version
+dotnet run --project src/Ralph.Cli -- version
 
 # Build and pack for distribution
-dotnet pack Ralph.Cli -c Release
+dotnet pack src/Ralph.Cli -c Release
 # Output: artifacts/package/release/Ralph.Cli.{version}.nupkg
+```
+
+### Output Structure
+
+The project uses .NET artifacts output for cleaner paths:
+
+```
+artifacts/
+├── bin/           # Build output
+│   ├── Ralph.Cli/
+│   └── Ralph.Tests/
+├── package/       # NuGet packages
+│   └── release/
+│       └── Ralph.Cli.{version}.nupkg
+└── publish/       # Published output
 ```
 
 ## Architecture
