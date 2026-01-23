@@ -24,6 +24,10 @@ public sealed class CopilotClientTests
         Assert.AreEqual("append", config.SystemMessageMode);
         Assert.AreEqual(CopilotClient.DefaultTimeout, config.Timeout);
         Assert.IsTrue(config.Streaming);
+        Assert.IsNotNull(config.AllowedDirectories);
+        Assert.AreEqual(0, config.AllowedDirectories.Count);
+        Assert.IsNull(config.AvailableTools);
+        Assert.IsNull(config.ExcludedTools);
     }
 
     [TestMethod]

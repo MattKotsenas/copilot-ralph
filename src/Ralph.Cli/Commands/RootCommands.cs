@@ -36,6 +36,10 @@ public class RootCommands
     /// <param name="systemPrompt">Custom system message, can be a prompt or path to Markdown file</param>
     /// <param name="systemPromptMode">System message mode: append or replace</param>
     /// <param name="logLevel">Log level: debug, info, warn, error</param>
+    /// <param name="allowedDirectories">Directories the AI is allowed to access (defaults to working directory)</param>
+    /// <param name="availableTools">Tools to allow (comma-separated). Defaults to common .NET dev tools if not specified.</param>
+    /// <param name="excludedTools">Tools to exclude (comma-separated)</param>
+    /// <param name="allowAllTools">Allow all tools (disables default tool filtering)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     [Command("run")]
     public async Task<int> Run(
@@ -50,6 +54,10 @@ public class RootCommands
         string? systemPrompt = null,
         string systemPromptMode = "append",
         string logLevel = "info",
+        string[]? allowedDirectories = null,
+        string? availableTools = null,
+        string? excludedTools = null,
+        bool allowAllTools = false,
         CancellationToken cancellationToken = default)
     {
         // Resolve prompt from argument (could be text or file path)
@@ -76,6 +84,10 @@ public class RootCommands
             AnsiConsole.MarkupLine(ConsoleStyles.ErrorText($"Error: invalid timeout format: {timeout}"));
             return ExitFailed;
         }
+
+        // Parse tool lists
+        var parsedAvailableTools = ParseToolList(availableTools, allowAllTools);
+        var parsedExcludedTools = ParseToolList(excludedTools, false);
 
         // Build loop configuration
         var loopConfig = new LoopConfig
@@ -107,18 +119,19 @@ public class RootCommands
         // Handle dry run
         if (dryRun)
         {
-            PrintDryRun(loopConfig);
+            PrintDryRun(loopConfig, allowedDirectories, parsedAvailableTools, parsedExcludedTools);
             return ExitSuccess;
         }
 
         // Print configuration
-        PrintLoopConfig(loopConfig);
+        PrintLoopConfig(loopConfig, allowedDirectories, parsedAvailableTools, parsedExcludedTools);
 
         // Create SDK client
         ICopilotClient sdkClient;
         try
         {
-            sdkClient = CreateSdkClient(loopConfig, streaming, logLevel, systemPrompt, systemPromptMode);
+            sdkClient = CreateSdkClient(loopConfig, streaming, logLevel, systemPrompt, systemPromptMode,
+                allowedDirectories, parsedAvailableTools, parsedExcludedTools);
         }
         catch (Exception ex)
         {
@@ -269,7 +282,7 @@ public class RootCommands
         return null;
     }
 
-    private static void PrintDryRun(LoopConfig config)
+    private static void PrintDryRun(LoopConfig config, string[]? allowedDirectories, List<string>? availableTools, List<string>? excludedTools)
     {
         AnsiConsole.MarkupLine(ConsoleStyles.Title("🔍 Dry Run - Configuration Preview"));
         AnsiConsole.WriteLine();
@@ -279,10 +292,28 @@ public class RootCommands
         AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Timeout:           ")}{config.Timeout}");
         AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Promise phrase:    ")}{config.PromisePhrase}");
         AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Working directory: ")}{config.WorkingDir}");
+
+        var dirs = allowedDirectories?.Length > 0 ? string.Join(", ", allowedDirectories) : config.WorkingDir;
+        AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Allowed dirs:      ")}{dirs}");
+
+        if (availableTools != null)
+        {
+            AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Available tools:   ")}{string.Join(", ", availableTools)}");
+        }
+        else
+        {
+            AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Available tools:   ")}(all)");
+        }
+
+        if (excludedTools is { Count: > 0 })
+        {
+            AnsiConsole.MarkupLine($"{ConsoleStyles.InfoText("  Excluded tools:    ")}{string.Join(", ", excludedTools)}");
+        }
+
         AnsiConsole.WriteLine();
     }
 
-    private static void PrintLoopConfig(LoopConfig config)
+    private static void PrintLoopConfig(LoopConfig config, string[]? allowedDirectories, List<string>? availableTools, List<string>? excludedTools)
     {
         // Print Ralph ASCII art
         AnsiConsole.MarkupLine(ConsoleStyles.InfoText(RalphArt.RalphWiggum));
@@ -294,6 +325,14 @@ public class RootCommands
         AnsiConsole.MarkupLine($"{ConsoleStyles.WarningText("Max iterations: ")}{config.MaxIterations}");
         AnsiConsole.MarkupLine($"{ConsoleStyles.WarningText("Timeout:        ")}{config.Timeout}");
         AnsiConsole.MarkupLine($"{ConsoleStyles.WarningText("Working dir:    ")}{config.WorkingDir}");
+
+        var dirs = allowedDirectories?.Length > 0 ? string.Join(", ", allowedDirectories) : config.WorkingDir;
+        AnsiConsole.MarkupLine($"{ConsoleStyles.WarningText("Allowed dirs:   ")}{dirs}");
+
+        if (availableTools != null)
+        {
+            AnsiConsole.MarkupLine($"{ConsoleStyles.WarningText("Tools:          ")}{string.Join(", ", availableTools)}");
+        }
     }
 
     private static async Task DisplayEventsAsync(System.Threading.Channels.ChannelReader<ILoopEvent> events, LoopConfig config, CancellationToken cancellationToken)
@@ -416,7 +455,29 @@ public class RootCommands
         AnsiConsole.WriteLine();
     }
 
-    private static ICopilotClient CreateSdkClient(LoopConfig loopConfig, bool streaming, string logLevel, string? systemPrompt, string systemPromptMode)
+    private static List<string>? ParseToolList(string? toolList, bool returnNullIfEmpty)
+    {
+        if (string.IsNullOrWhiteSpace(toolList))
+        {
+            // Return null if empty - the SDK treats null as "use defaults" 
+            // but an empty list as "none allowed"
+            return returnNullIfEmpty ? null : null;
+        }
+
+        return toolList
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+    }
+
+    private static ICopilotClient CreateSdkClient(
+        LoopConfig loopConfig,
+        bool streaming,
+        string logLevel,
+        string? systemPrompt,
+        string systemPromptMode,
+        string[]? allowedDirectories,
+        List<string>? availableTools,
+        List<string>? excludedTools)
     {
         // Build system prompt from template
         var systemMessage = SystemPrompt.Build(loopConfig.PromisePhrase);
@@ -427,6 +488,8 @@ public class RootCommands
             systemMessage = ResolvePrompt(systemPrompt);
         }
 
+        // availableTools is null when user wants all tools (--allow-all-tools)
+        // Pass null to SDK to allow all tools
         var config = new ClientConfig
         {
             Model = loopConfig.Model,
@@ -435,7 +498,10 @@ public class RootCommands
             Streaming = streaming,
             LogLevel = logLevel,
             SystemMessage = systemMessage,
-            SystemMessageMode = systemPromptMode
+            SystemMessageMode = systemPromptMode,
+            AllowedDirectories = allowedDirectories?.ToList() ?? [],
+            AvailableTools = availableTools,
+            ExcludedTools = excludedTools
         };
 
         return new CopilotClient(config);
