@@ -42,6 +42,7 @@ public sealed class LoopEngine
     private int _iteration;
     private DateTime _startTime;
     private bool _eventsClosed;
+    private bool _promiseDetected;
     private CancellationTokenSource? _cts;
 
     public LoopEngine(LoopConfig? config, ICopilotClient? sdk = null)
@@ -211,6 +212,10 @@ public sealed class LoopEngine
         if (_config.MaxIterations > 0 && _iteration >= _config.MaxIterations)
             return (await CompleteAsync(), true);
 
+        // Check if promise was detected in a previous iteration
+        if (_promiseDetected)
+            return (await CompleteAsync(), true);
+
         return (null, false);
     }
 
@@ -242,6 +247,7 @@ public sealed class LoopEngine
 
                         if (!textEvent.Reasoning && PromiseDetector.DetectPromise(textEvent.Text, _config.PromisePhrase))
                         {
+                            _promiseDetected = true;
                             await EmitAsync(new PromiseDetectedEvent(_config.PromisePhrase, "ai_response", iteration));
                         }
                         break;

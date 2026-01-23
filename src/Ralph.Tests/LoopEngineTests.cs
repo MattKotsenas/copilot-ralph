@@ -167,6 +167,9 @@ public sealed class LoopEngineTests
 
         Assert.AreEqual(LoopState.Complete, engine.State);
         Assert.AreEqual(LoopState.Complete, result.State);
+        // Loop should exit after only 1 iteration when promise is detected
+        // (the promise is checked before starting iteration 2)
+        Assert.AreEqual(1, result.Iterations, "Loop should exit after 1 iteration when promise detected");
     }
 
     [TestMethod]
