@@ -29,9 +29,9 @@ Checks for promise → If found: complete, else: continue → Max iterations rea
 ### Technology Stack
 
 - **Language:** C# (.NET 10.0)
-- **CLI:** ConsoleAppFramework (command framework)
+- **CLI:** System.CommandLine (command framework)
 - **Console:** Spectre.Console (terminal rendering)
-- **Testing:** MSTest with Microsoft Testing Platform v2
+- **Testing:** MSTest with Verify.MSTest for snapshot testing
 
 ## Architecture
 
@@ -302,6 +302,37 @@ public sealed class PromiseDetectorTests
     }
 }
 ```
+
+### Snapshot Testing with Verify
+
+We use [Verify](https://github.com/VerifyTests/Verify) for snapshot testing of generated outputs like shell completion scripts.
+
+```csharp
+[TestClass]
+public sealed class CompletionScriptTests : VerifyBase
+{
+    [TestMethod]
+    public Task PowerShell_CompletionScript_MatchesSnapshot()
+    {
+        var script = CompletionScripts.GetScript("pwsh");
+        return Verify(script);
+    }
+}
+```
+
+**Updating Snapshots:**
+
+When a snapshot test fails because the output has intentionally changed, use the verify tool to accept the new baseline:
+
+```powershell
+# Accept all pending changes
+dotnet verify accept
+
+# Review changes interactively
+dotnet verify review
+```
+
+The `.verified.*` files are the accepted baselines (committed to git). The `.received.*` files are the actual test outputs (ignored by git).
 
 ### Mock Dependencies
 

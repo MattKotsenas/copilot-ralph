@@ -1,0 +1,2 @@
+﻿# Ralph CLI completion for Fish
+complete -f -c ralph -a "(ralph '[suggest:'(commandline -C)']' (commandline) 2>/dev/null)"

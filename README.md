@@ -87,7 +87,8 @@ dotnet pack src/Ralph.Cli -c Release
 
 # Update the tool
 dotnet tool update --global Ralph.Cli `
-  --add-source ./artifacts/package/release
+  --add-source ./artifacts/package/release `
+  --prerelease
 ```
 
 ### Uninstalling
@@ -215,6 +216,24 @@ Show version information.
 ```bash
 ralph version
 ralph version --short
+```
+
+### `ralph completion`
+
+Generate shell completion scripts for tab completion support.
+
+```bash
+# PowerShell - add to $PROFILE
+ralph completion pwsh | Out-String | Invoke-Expression
+
+# Bash - add to ~/.bashrc
+eval "$(ralph completion bash)"
+
+# Zsh - add to ~/.zshrc
+eval "$(ralph completion zsh)"
+
+# Fish - add to ~/.config/fish/config.fish
+ralph completion fish | source
 ```
 
 ## Configuration

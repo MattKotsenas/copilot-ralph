@@ -1,0 +1,10 @@
+﻿# Ralph CLI completion for Bash
+_ralph_bash_complete() {
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local IFS=$'\n'
+    local candidates
+
+    read -d '' -ra candidates < <(ralph "[suggest:${COMP_POINT}]" "${COMP_LINE}" 2>/dev/null)
+    read -d '' -ra COMPREPLY < <(compgen -W "${candidates[*]:-}" -- "$cur")
+}
+complete -F _ralph_bash_complete ralph

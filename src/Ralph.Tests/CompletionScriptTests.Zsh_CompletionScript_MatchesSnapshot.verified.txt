@@ -1,0 +1,13 @@
+﻿# Ralph CLI completion for Zsh
+_ralph_zsh_complete() {
+    local pos=$((CURSOR + 1))
+    local completions=("$(ralph "[suggest:${pos}]" "$BUFFER" 2>/dev/null)")
+
+    if [ -z "$completions" ]; then
+        _arguments '*::arguments: _normal'
+        return
+    fi
+
+    _values = "${(ps:\n:)completions}"
+}
+compdef _ralph_zsh_complete ralph

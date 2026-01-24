@@ -1,0 +1,8 @@
+﻿# Ralph CLI completion for PowerShell
+Register-ArgumentCompleter -Native -CommandName ralph -ScriptBlock {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    $command = $commandAst.ToString()
+    ralph "[suggest:$cursorPosition]" $command 2>$null | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+    }
+}

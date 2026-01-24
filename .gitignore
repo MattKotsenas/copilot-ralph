@@ -47,6 +47,9 @@ Generated\ Files/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
+# Verify snapshot testing - received files (not yet approved)
+*.received.*
+
 # NUnit
 *.VisualState.xml
 TestResult.xml
