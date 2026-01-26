@@ -26,7 +26,7 @@ public sealed class CopilotClientTests
         Assert.AreEqual(CopilotClient.DefaultTimeout, config.Timeout);
         Assert.IsTrue(config.Streaming);
         Assert.IsNotNull(config.AllowedDirectories);
-        Assert.AreEqual(0, config.AllowedDirectories.Count);
+        Assert.IsEmpty(config.AllowedDirectories);
         Assert.IsNull(config.AvailableTools);
         Assert.IsNull(config.ExcludedTools);
     }

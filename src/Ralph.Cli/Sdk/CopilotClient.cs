@@ -1,9 +1,12 @@
 // Copilot SDK client wrapper.
 
 using System.Threading.Channels;
-using Ralph.Cli.Core;
-using SdkClient = GitHub.Copilot.SDK.CopilotClient;
+
 using GitHub.Copilot.SDK;
+
+using Ralph.Cli.Core;
+
+using SdkClient = GitHub.Copilot.SDK.CopilotClient;
 
 namespace Ralph.Cli.Sdk;
 
@@ -237,7 +240,7 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
     private static List<string> ExtractPossiblePaths(IDictionary<string, object>? data)
     {
         var paths = new List<string>();
-        
+
         if (data == null)
             return paths;
 
@@ -311,7 +314,7 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
     private static List<string> ExtractPathsFromCommandText(IDictionary<string, object>? data)
     {
         var paths = new List<string>();
-        
+
         if (data == null)
             return paths;
 
@@ -319,7 +322,7 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
         string? commandText = null;
         if (data.TryGetValue("fullCommandText", out var cmdObj) && cmdObj != null)
         {
-            if (cmdObj is System.Text.Json.JsonElement jsonElement && 
+            if (cmdObj is System.Text.Json.JsonElement jsonElement &&
                 jsonElement.ValueKind == System.Text.Json.JsonValueKind.String)
             {
                 commandText = jsonElement.GetString();
@@ -338,7 +341,7 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
         var windowsPathRegex = new System.Text.RegularExpressions.Regex(
             @"[A-Za-z]:[\\\/][^\s""'`]*",
             System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-        
+
         foreach (System.Text.RegularExpressions.Match match in windowsPathRegex.Matches(commandText))
         {
             var path = match.Value.TrimEnd('"', '\'', '`', ',', ';');
@@ -352,7 +355,7 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
         var unixPathRegex = new System.Text.RegularExpressions.Regex(
             @"(?<=[""'\s]|^)/[^\s""'`]+",
             System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-        
+
         foreach (System.Text.RegularExpressions.Match match in unixPathRegex.Matches(commandText))
         {
             var path = match.Value.TrimEnd('"', '\'', '`', ',', ';');

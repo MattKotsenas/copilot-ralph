@@ -1,6 +1,7 @@
 // Snapshot tests for shell completion scripts using Verify.
 
 using Ralph.Cli.Commands;
+
 using VerifyMSTest;
 
 namespace Ralph.Tests;

@@ -41,7 +41,7 @@ Checks for promise → If found: complete, else: continue → Max iterations rea
 ┌─────────────────────────────────────────────────────────────┐
 │                     Commands Layer                          │
 │  (Ralph.Cli/Commands)                                       │
-│  - Command parsing (ConsoleAppFramework)                    │
+│  - Command parsing (System.CommandLine)                    │
 │  - Flag handling                                            │
 │  - Entry point                                              │
 └────────────────┬────────────────────────────────────────────┘
@@ -87,7 +87,7 @@ CLI Flags → Loop Config → Loop Engine → SDK Client → Copilot AI
 
 ### `Ralph.Cli/Commands`
 
-**Purpose:** ConsoleAppFramework command definitions
+**Purpose:** System.CommandLine command definitions
 
 **Responsibilities:**
 

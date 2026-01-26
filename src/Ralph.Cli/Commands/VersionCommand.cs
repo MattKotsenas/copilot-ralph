@@ -1,6 +1,7 @@
 // Version command implementation.
 
 using System.Runtime.InteropServices;
+
 using VersionInfo = Ralph.Cli.Version;
 
 namespace Ralph.Cli.Commands;

@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Text;
+
 using Ralph.Cli.Commands;
 
 // Ensure console can display Unicode characters (including emojis and Braille art)

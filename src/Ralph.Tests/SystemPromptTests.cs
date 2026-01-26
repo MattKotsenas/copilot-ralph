@@ -30,6 +30,6 @@ public sealed class SystemPromptTests
         var result = SystemPrompt.Build("All work finished!");
 
         StringAssert.Contains(result, "<promise>All work finished!</promise>");
-        Assert.IsFalse(result.Contains("{{Promise}}"));
+        Assert.DoesNotContain("{{Promise}}", result);
     }
 }

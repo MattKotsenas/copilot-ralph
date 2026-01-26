@@ -73,6 +73,7 @@ dotnet pack src/Ralph.Cli -c Release
 # Install as a global tool from the local package
 dotnet tool install --global Ralph.Cli `
   --add-source ./artifacts/package/release
+  --prerelease
 ```
 
 After installation, the `ralph` command will be available globally.
@@ -141,30 +142,6 @@ ralph run \
    - User cancels (Ctrl+C) ✗ Cancelled
 6. **Summary** - Display final status, iteration count, and duration
 
-```text
-┌──────────────┐
-│   Config &   │
-│   Prompt     │
-└──────┬───────┘
-       │
-       v
-┌──────────────────┐      ┌─────────────────┐
-│  SDK Client      │─────>│  Copilot AI     │
-│  Loop Engine     │      │  (per iteration)│
-└──────┬───────────┘      └────────┬────────┘
-       │                           │
-       v                           v
-┌──────────────────┐      ┌────────────────┐
-│  Event Listener  │<─────│  Tools Execute │
-│  (Display)       │      │  (file ops,etc)│
-└──────┬───────────┘      └────────────────┘
-       │                           │
-       └───────────────────────────┘
-              │
-              v
-         ✓ Complete (or timeout/error)
-```
-
 ## Commands
 
 ### `ralph run`
@@ -222,16 +199,22 @@ ralph version --short
 
 Generate shell completion scripts for tab completion support.
 
-```bash
+```powershell
 # PowerShell - add to $PROFILE
 ralph completion pwsh | Out-String | Invoke-Expression
+```
 
+```bash
 # Bash - add to ~/.bashrc
 eval "$(ralph completion bash)"
+```
 
+```bash
 # Zsh - add to ~/.zshrc
 eval "$(ralph completion zsh)"
+```
 
+```bash
 # Fish - add to ~/.config/fish/config.fish
 ralph completion fish | source
 ```
@@ -239,11 +222,6 @@ ralph completion fish | source
 ## Configuration
 
 Ralph is configured entirely through command-line flags with sensible defaults. All settings can be customized per run:
-
-- **Command-line flags** - All configuration via CLI flags
-- **Default values** - Sensible defaults for all options
-
-Common flags:
 
 - `--max-iterations 10` - Maximum iterations before stopping
 - `--timeout 30m` - Maximum runtime
@@ -276,43 +254,6 @@ dotnet pack src/Ralph.Cli -c Release
 # Output: artifacts/package/release/Ralph.Cli.{version}.nupkg
 ```
 
-### Output Structure
-
-The project uses .NET artifacts output for cleaner paths:
-
-```
-artifacts/
-├── bin/           # Build output
-│   ├── Ralph.Cli/
-│   └── Ralph.Tests/
-├── package/       # NuGet packages
-│   └── release/
-│       └── Ralph.Cli.{version}.nupkg
-└── publish/       # Published output
-```
-
-## Architecture
-
-Ralph is organized into distinct layers:
-
-```text
-src/
-├── Ralph.Cli/              # Main application
-│   ├── Commands/           # CLI commands (ConsoleAppFramework)
-│   ├── Core/               # Loop engine, events, config
-│   ├── Sdk/                # Copilot SDK wrapper
-│   ├── Styles/             # Console styles (Spectre.Console)
-│   └── Version/            # Version information
-└── Ralph.Tests/            # MSTest v2 tests
-```
-
-### Technology Stack
-
-- **CLI Framework**: [ConsoleAppFramework](https://github.com/Cysharp/ConsoleAppFramework)
-- **Console Rendering**: [Spectre.Console](https://spectreconsole.net/)
-- **Testing**: MSTest with Microsoft Testing Platform v2
-- **Target Framework**: .NET 10.0
-
 ## Contributing
 
 Contributions are welcome! Please:
@@ -327,7 +268,7 @@ MIT License - see [LICENSE](./LICENSE) for details
 
 ## Acknowledgments
 
-- **Original Implementation**: [copilot-ralph](https://github.com/JanDeDobbeleer/copilot-ralph) by [Jan De Dobbeleer](https://github.com/JanDeDobbeleer)
+- Original Implementation [copilot-ralph](https://github.com/JanDeDobbeleer/copilot-ralph) by [Jan De Dobbeleer](https://github.com/JanDeDobbeleer)
 - Inspired by the [Ralph Wiggum plugin](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum) for Claude
 - Built with [GitHub Copilot SDK](https://github.com/github/copilot-sdk)
 - Console UI powered by [Spectre.Console](https://spectreconsole.net/)

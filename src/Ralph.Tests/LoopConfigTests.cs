@@ -1,4 +1,4 @@
-// Tests for loop configuration and state.
+// Tests for loop configuration.
 
 using Ralph.Cli.Core;
 
@@ -18,20 +18,5 @@ public sealed class LoopConfigTests
         Assert.AreEqual(LoopConfig.DefaultModel, config.Model);
         Assert.AreEqual(".", config.WorkingDir);
         Assert.IsFalse(config.DryRun);
-    }
-}
-
-[TestClass]
-public sealed class LoopStateTests
-{
-    [TestMethod]
-    [DataRow(LoopState.Idle, "Idle")]
-    [DataRow(LoopState.Running, "Running")]
-    [DataRow(LoopState.Complete, "Complete")]
-    [DataRow(LoopState.Failed, "Failed")]
-    [DataRow(LoopState.Cancelled, "Cancelled")]
-    public void LoopState_ToString_ReturnsExpected(LoopState state, string expected)
-    {
-        Assert.AreEqual(expected, state.ToString());
     }
 }

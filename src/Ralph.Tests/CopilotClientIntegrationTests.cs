@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using System.Text;
+
 using Ralph.Cli.Sdk;
 
 namespace Ralph.Tests;
@@ -38,7 +39,7 @@ public sealed class CopilotClientIntegrationTests
     }
 
     [TestMethod]
-    [Timeout(60000)] // 60 second timeout for integration tests
+    [Timeout(60000, CooperativeCancellation = true)] // 60 second timeout for integration tests
     public async Task CopilotClient_CanStartAndStop()
     {
         if (!IsCopilotCliAvailable())
@@ -63,7 +64,7 @@ public sealed class CopilotClientIntegrationTests
     }
 
     [TestMethod]
-    [Timeout(60000)]
+    [Timeout(60000, CooperativeCancellation = true)]
     public async Task CopilotClient_CanCreateSession()
     {
         if (!IsCopilotCliAvailable())
@@ -89,7 +90,7 @@ public sealed class CopilotClientIntegrationTests
     }
 
     [TestMethod]
-    [Timeout(120000)] // 2 minute timeout for prompt test
+    [Timeout(120000, CooperativeCancellation = true)] // 2 minute timeout for prompt test
     public async Task CopilotClient_CanSendSimplePrompt()
     {
         if (!IsCopilotCliAvailable())
@@ -128,7 +129,7 @@ public sealed class CopilotClientIntegrationTests
     }
 
     [TestMethod]
-    [Timeout(120000)]
+    [Timeout(120000, CooperativeCancellation = true)]
     public async Task CopilotClient_WithAvailableToolsNull_AllowsAllTools()
     {
         if (!IsCopilotCliAvailable())
@@ -169,7 +170,7 @@ public sealed class CopilotClientIntegrationTests
     }
 
     [TestMethod]
-    [Timeout(120000)]
+    [Timeout(120000, CooperativeCancellation = true)]
     public async Task CopilotClient_DirectorySandboxing_DeniesOutsidePaths()
     {
         if (!IsCopilotCliAvailable())
@@ -208,7 +209,7 @@ public sealed class CopilotClientIntegrationTests
     }
 
     [TestMethod]
-    [Timeout(180000)] // 3 minute timeout for tool test
+    [Timeout(180000, CooperativeCancellation = true)] // 3 minute timeout for tool test
     public async Task CopilotClient_CanUseViewTool()
     {
         if (!IsCopilotCliAvailable())
@@ -277,7 +278,7 @@ public sealed class CopilotClientIntegrationTests
             var response = responseText.ToString();
             var containsContent = response.Contains("ABC123XYZ") || response.Contains("unique");
 
-            Assert.IsTrue(sawToolExecution || containsContent, 
+            Assert.IsTrue(sawToolExecution || containsContent,
                 $"Should have used a tool or referenced the file content. Response: {response}");
         }
         finally
@@ -288,7 +289,7 @@ public sealed class CopilotClientIntegrationTests
     }
 
     [TestMethod]
-    [Timeout(180000)]
+    [Timeout(180000, CooperativeCancellation = true)]
     public async Task CopilotClient_CanUsePowershellTool()
     {
         if (!IsCopilotCliAvailable())

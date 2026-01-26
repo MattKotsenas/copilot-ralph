@@ -1,6 +1,7 @@
 // Tests for loop engine.
 
 using System.Threading.Channels;
+
 using Ralph.Cli.Core;
 using Ralph.Cli.Sdk;
 
@@ -21,36 +22,23 @@ public class MockSdkClient : ICopilotClient
     public Exception? SendPromptError { get; set; }
     public TimeSpan ResponseDelay { get; set; } = TimeSpan.Zero;
 
-    private bool _started;
-    private bool _hasSession;
-
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
         if (StartError != null)
             throw StartError;
-        _started = true;
         return Task.CompletedTask;
     }
 
-    public Task StopAsync()
-    {
-        _started = false;
-        return Task.CompletedTask;
-    }
+    public Task StopAsync() => Task.CompletedTask;
 
     public Task CreateSessionAsync(CancellationToken cancellationToken = default)
     {
         if (CreateSessionError != null)
             throw CreateSessionError;
-        _hasSession = true;
         return Task.CompletedTask;
     }
 
-    public Task DestroySessionAsync(CancellationToken cancellationToken = default)
-    {
-        _hasSession = false;
-        return Task.CompletedTask;
-    }
+    public Task DestroySessionAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
 
     public ChannelReader<IEvent> SendPromptAsync(string prompt, CancellationToken cancellationToken = default)
     {
@@ -146,7 +134,7 @@ public sealed class LoopEngineTests
     }
 
     [TestMethod]
-    [Timeout(5000)]
+    [Timeout(5000, CooperativeCancellation = true)]
     public async Task Start_WithPromise_TransitionsToComplete()
     {
         var mockSdk = new MockSdkClient
@@ -173,7 +161,7 @@ public sealed class LoopEngineTests
     }
 
     [TestMethod]
-    [Timeout(5000)]
+    [Timeout(5000, CooperativeCancellation = true)]
     public async Task Start_MaxIterations_Completes()
     {
         var mockSdk = new MockSdkClient
@@ -197,7 +185,7 @@ public sealed class LoopEngineTests
     }
 
     [TestMethod]
-    [Timeout(5000)]  // 5 second timeout
+    [Timeout(5000, CooperativeCancellation = true)]  // 5 second timeout
     public async Task Start_Cancellation_TransitionsToCancelled()
     {
         var mockSdk = new MockSdkClient
@@ -223,7 +211,7 @@ public sealed class LoopEngineTests
     }
 
     [TestMethod]
-    [Timeout(5000)]
+    [Timeout(5000, CooperativeCancellation = true)]
     public async Task Start_SdkStartError_Fails()
     {
         var mockSdk = new MockSdkClient
@@ -240,7 +228,7 @@ public sealed class LoopEngineTests
     }
 
     [TestMethod]
-    [Timeout(5000)]
+    [Timeout(5000, CooperativeCancellation = true)]
     public async Task Start_CreateSessionError_Fails()
     {
         var mockSdk = new MockSdkClient
@@ -256,7 +244,7 @@ public sealed class LoopEngineTests
     }
 
     [TestMethod]
-    [Timeout(5000)]
+    [Timeout(5000, CooperativeCancellation = true)]
     public async Task Start_DryRunWithoutSdk_Completes()
     {
         var config = new LoopConfig

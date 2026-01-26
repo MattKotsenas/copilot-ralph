@@ -88,27 +88,11 @@ public sealed class SdkEventsTests
 public sealed class ToolCallTests
 {
     [TestMethod]
-    public void ToolCall_HasAllProperties()
-    {
-        var parameters = new Dictionary<string, object?> { ["path"] = "file.txt" };
-        var toolCall = new ToolCall
-        {
-            Id = "123",
-            Name = "read_file",
-            Parameters = parameters
-        };
-
-        Assert.AreEqual("123", toolCall.Id);
-        Assert.AreEqual("read_file", toolCall.Name);
-        Assert.AreEqual(parameters, toolCall.Parameters);
-    }
-
-    [TestMethod]
     public void ToolCall_DefaultParameters_IsEmptyDictionary()
     {
         var toolCall = new ToolCall { Name = "test" };
 
         Assert.IsNotNull(toolCall.Parameters);
-        Assert.AreEqual(0, toolCall.Parameters.Count);
+        Assert.IsEmpty(toolCall.Parameters);
     }
 }

@@ -18,7 +18,7 @@ public sealed class DirectorySandboxTests
 
         var client = new CopilotClient(config);
 
-        Assert.AreEqual(1, client.AllowedDirectories.Count);
+        Assert.HasCount(1, client.AllowedDirectories);
         // Paths are normalized (trailing slash removed)
         var expected = Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         Assert.AreEqual(expected, client.AllowedDirectories[0]);
@@ -35,7 +35,7 @@ public sealed class DirectorySandboxTests
 
         var client = new CopilotClient(config);
 
-        Assert.AreEqual(2, client.AllowedDirectories.Count);
+        Assert.HasCount(2, client.AllowedDirectories);
         Assert.AreEqual(Path.GetFullPath("."), client.AllowedDirectories[0]);
         Assert.AreEqual(Path.GetFullPath(".."), client.AllowedDirectories[1]);
     }
@@ -208,7 +208,7 @@ public sealed class DirectorySandboxTests
         var parentDir = Directory.GetParent(workingDir)?.FullName;
         if (parentDir != null)
         {
-            Assert.IsFalse(client.IsPathAllowed(Path.Combine(parentDir, "other-file.txt")), 
+            Assert.IsFalse(client.IsPathAllowed(Path.Combine(parentDir, "other-file.txt")),
                 $"Path in parent directory should be denied: {parentDir}");
         }
     }
@@ -255,7 +255,7 @@ public sealed class ShellCommandPathExtractionTests
         // like: Set-Content -Path "D:\hello.txt" -Value "test"
         Assert.IsFalse(client.IsPathAllowed("D:\\hello.txt"));
         Assert.IsFalse(client.IsPathAllowed("C:\\Windows\\file.txt"));
-        
+
         // Paths within allowed directory should pass
         Assert.IsTrue(client.IsPathAllowed(Path.Combine(allowedDir, "file.txt")));
     }
