@@ -67,6 +67,9 @@ public static class RunCommand
         var parsedAvailableTools = ParseToolList(availableTools, allowAllTools);
         var parsedExcludedTools = ParseToolList(excludedTools, false);
 
+        // Check if we should switch to repo root
+        workingDir = await CheckAndPromptForRepoRoot(workingDir, cancellationToken);
+
         // Build loop configuration
         var loopConfig = new LoopConfig
         {
@@ -466,5 +469,131 @@ public static class RunCommand
         };
 
         return new CopilotClient(config);
+    }
+
+    private static async Task<string> CheckAndPromptForRepoRoot(string workingDir, CancellationToken cancellationToken)
+    {
+        var absoluteWorkingDir = Path.GetFullPath(workingDir);
+
+        // Get git repo root
+        string? repoRoot;
+        try
+        {
+            repoRoot = await GetGitRepoRoot(absoluteWorkingDir, cancellationToken);
+        }
+        catch
+        {
+            // Not in a git repo or git not available
+            return workingDir;
+        }
+
+        if (repoRoot == null)
+        {
+            // Not in a git repo
+            return workingDir;
+        }
+
+        // Normalize paths for comparison
+        var normalizedWorkingDir = absoluteWorkingDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var normalizedRepoRoot = repoRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        if (string.Equals(normalizedWorkingDir, normalizedRepoRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            // Already at repo root
+            return workingDir;
+        }
+
+        // Prompt user with 30 second timeout
+        AnsiConsole.MarkupLine(ConsoleStyles.WarningText($"⚠ Current directory is not the repository root."));
+        AnsiConsole.MarkupLine($"  Current:  {absoluteWorkingDir}");
+        AnsiConsole.MarkupLine($"  Repo root: {repoRoot}");
+        AnsiConsole.WriteLine();
+
+        var switchToRoot = await PromptWithTimeout(
+            "Switch to repository root?",
+            defaultValue: true,
+            timeout: TimeSpan.FromSeconds(30),
+            cancellationToken);
+
+        if (switchToRoot)
+        {
+            AnsiConsole.MarkupLine(ConsoleStyles.InfoText($"Switching to: {repoRoot}"));
+            return repoRoot;
+        }
+
+        return workingDir;
+    }
+
+    private static async Task<string?> GetGitRepoRoot(string directory, CancellationToken cancellationToken)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "git",
+            Arguments = "rev-parse --show-toplevel",
+            WorkingDirectory = directory,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var process = System.Diagnostics.Process.Start(psi);
+        if (process == null)
+            return null;
+
+        var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
+        await process.WaitForExitAsync(cancellationToken);
+
+        if (process.ExitCode != 0)
+            return null;
+
+        var result = output.Trim();
+
+        // Convert Unix-style path from git to Windows-style if needed
+        if (OperatingSystem.IsWindows() && result.StartsWith('/'))
+        {
+            // Git on Windows with Unix paths (e.g., /c/Users/...) - convert to C:\Users\...
+            if (result.Length >= 3 && result[2] == '/')
+            {
+                result = $"{char.ToUpper(result[1])}:{result[2..]}";
+            }
+            result = result.Replace('/', Path.DirectorySeparatorChar);
+        }
+
+        return result;
+    }
+
+    private static async Task<bool> PromptWithTimeout(string prompt, bool defaultValue, TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        // In non-interactive mode, use default value
+        if (!Environment.UserInteractive || Console.IsInputRedirected)
+        {
+            AnsiConsole.MarkupLine(ConsoleStyles.InfoText($"Non-interactive mode - using default: {(defaultValue ? "yes" : "no")}"));
+            return defaultValue;
+        }
+
+        var timeoutMessage = $"(auto-{(defaultValue ? "yes" : "no")} in {(int)timeout.TotalSeconds}s)";
+
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCts.CancelAfter(timeout);
+
+        try
+        {
+            return await Task.Run(() =>
+            {
+                return AnsiConsole.Prompt(
+                    new ConfirmationPrompt($"{prompt} {timeoutMessage}")
+                    {
+                        DefaultValue = defaultValue
+                    });
+            }, timeoutCts.Token);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            // Timeout occurred, use default
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine(ConsoleStyles.InfoText($"Timeout - using default: {(defaultValue ? "yes" : "no")}"));
+            return defaultValue;
+        }
     }
 }
