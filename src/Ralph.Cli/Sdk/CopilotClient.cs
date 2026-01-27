@@ -522,6 +522,10 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
 
         var done = new TaskCompletionSource();
 
+        // Track tool calls by ID to correlate start/complete events
+        // (ToolExecutionCompleteEvent doesn't include ToolName)
+        var pendingToolCalls = new Dictionary<string, string>();
+
         // Register cancellation
         await using var registration = cancellationToken.Register(() => done.TrySetCanceled());
 
@@ -550,6 +554,8 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
                         break;
 
                     case GitHub.Copilot.SDK.ToolExecutionStartEvent toolStart:
+                        // Track tool name by ID for correlation with complete event
+                        pendingToolCalls[toolStart.Data.ToolCallId] = toolStart.Data.ToolName;
                         writer.TryWrite(new ToolCallEvent
                         {
                             ToolCall = new ToolCall
@@ -564,12 +570,17 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
                         break;
 
                     case ToolExecutionCompleteEvent toolComplete:
+                        // Look up tool name from tracked start event
+                        var toolName = pendingToolCalls.TryGetValue(toolComplete.Data.ToolCallId, out var name)
+                            ? name
+                            : "tool";
+                        pendingToolCalls.Remove(toolComplete.Data.ToolCallId);
                         writer.TryWrite(new ToolResultEvent
                         {
                             ToolCall = new ToolCall
                             {
                                 Id = toolComplete.Data.ToolCallId,
-                                Name = "tool", // Not available in complete event
+                                Name = toolName,
                             },
                             Result = toolComplete.Data.Result?.Content ?? "",
                             Error = toolComplete.Data.Error != null
