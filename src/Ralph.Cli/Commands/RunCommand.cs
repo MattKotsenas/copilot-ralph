@@ -124,6 +124,10 @@ public static class RunCommand
 
         var startTime = DateTime.UtcNow;
 
+        // Set terminal title to show activity
+        using var terminalTitle = new TerminalTitle();
+        terminalTitle.SetActive();
+
         // Start event listener in background
         var eventTask = DisplayEventsAsync(engine.Events, loopConfig, cts.Token);
 
