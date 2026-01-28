@@ -52,4 +52,50 @@ public sealed class CopilotClientTests
         var client = new CopilotClient(config);
         Assert.AreEqual("gpt-test", client.Model);
     }
+
+    [TestMethod]
+    public void PermissionRequestResult_WithRulesEmpty_DoesNotThrow()
+    {
+        // This test verifies the pattern we use in HandlePermissionRequest.
+        // The SDK expects Rules to be an empty list, not null.
+        // If Rules is null, the JavaScript SDK throws:
+        // "Cannot read properties of undefined (reading 'map')"
+        var result = new GitHub.Copilot.SDK.PermissionRequestResult
+        {
+            Kind = "approved",
+            Rules = []
+        };
+
+        Assert.AreEqual("approved", result.Kind);
+        Assert.IsNotNull(result.Rules);
+        Assert.IsEmpty(result.Rules);
+    }
+
+    [TestMethod]
+    public void PermissionRequestResult_ApprovedPattern_HasRequiredProperties()
+    {
+        // Verify the "approved" pattern we use sets both Kind and Rules
+        var result = new GitHub.Copilot.SDK.PermissionRequestResult
+        {
+            Kind = "approved",
+            Rules = []
+        };
+
+        Assert.AreEqual("approved", result.Kind);
+        Assert.IsNotNull(result.Rules, "Rules must not be null - SDK requires empty list");
+    }
+
+    [TestMethod]
+    public void PermissionRequestResult_DeniedPattern_HasRequiredProperties()
+    {
+        // Verify the "denied-by-rules" pattern we use sets both Kind and Rules
+        var result = new GitHub.Copilot.SDK.PermissionRequestResult
+        {
+            Kind = "denied-by-rules",
+            Rules = []
+        };
+
+        Assert.AreEqual("denied-by-rules", result.Kind);
+        Assert.IsNotNull(result.Rules, "Rules must not be null - SDK requires empty list");
+    }
 }

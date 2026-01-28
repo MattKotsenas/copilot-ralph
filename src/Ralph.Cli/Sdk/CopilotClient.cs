@@ -167,13 +167,15 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
                 // Deny shell commands that access paths outside allowed directories
                 return Task.FromResult(new PermissionRequestResult
                 {
-                    Kind = "denied-by-rules"
+                    Kind = "denied-by-rules",
+                    Rules = []
                 });
             }
 
             return Task.FromResult(new PermissionRequestResult
             {
-                Kind = "approved"
+                Kind = "approved",
+                Rules = []
             });
         }
 
@@ -188,7 +190,8 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
                 // If we can't find a path for a read/write operation, deny it
                 return Task.FromResult(new PermissionRequestResult
                 {
-                    Kind = "denied-by-rules"
+                    Kind = "denied-by-rules",
+                    Rules = []
                 });
             }
 
@@ -197,13 +200,15 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
                 // Deny access to paths outside the allowed directories
                 return Task.FromResult(new PermissionRequestResult
                 {
-                    Kind = "denied-by-rules"
+                    Kind = "denied-by-rules",
+                    Rules = []
                 });
             }
 
             return Task.FromResult(new PermissionRequestResult
             {
-                Kind = "approved"
+                Kind = "approved",
+                Rules = []
             });
         }
 
@@ -213,7 +218,8 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
         {
             return Task.FromResult(new PermissionRequestResult
             {
-                Kind = "denied-by-rules"
+                Kind = "denied-by-rules",
+                Rules = []
             });
         }
 
@@ -225,7 +231,8 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
             {
                 return Task.FromResult(new PermissionRequestResult
                 {
-                    Kind = "denied-by-rules"
+                    Kind = "denied-by-rules",
+                    Rules = []
                 });
             }
         }
@@ -233,7 +240,8 @@ public sealed class CopilotClient : ICopilotClient, IAsyncDisposable
         // Approve operations that don't involve file paths or are within allowed dirs
         return Task.FromResult(new PermissionRequestResult
         {
-            Kind = "approved"
+            Kind = "approved",
+            Rules = []
         });
     }
 
