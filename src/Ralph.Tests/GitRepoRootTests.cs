@@ -61,7 +61,7 @@ public sealed class GitRepoRootTests
         var normalized2 = NormalizePath(pathWithoutTrailing);
 
         Assert.AreEqual(normalized1, normalized2);
-        Assert.IsFalse(normalized1.EndsWith(Path.DirectorySeparatorChar));
+        Assert.DoesNotEndWith(normalized1, Path.DirectorySeparatorChar.ToString());
     }
 
     [TestMethod]
