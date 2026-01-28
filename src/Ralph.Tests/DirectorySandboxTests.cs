@@ -183,10 +183,10 @@ public sealed class DirectorySandboxTests
     }
 
     [TestMethod]
-    public void IsPathAllowed_DeniesAccessToDriveRoot()
+    public void IsPathAllowed_DeniesAccessToRootPath()
     {
-        // Simulate the user's scenario: working in D:\Projects\copilot-ralph
-        // but trying to access D:\hello.txt
+        // Simulate the scenario: working in a project subdirectory
+        // but trying to access files at the root
         var workingDir = Path.Combine(Path.GetTempPath(), "projects", "test-project");
         var config = new ClientConfig
         {
@@ -199,10 +199,10 @@ public sealed class DirectorySandboxTests
         // Files in project directory should be allowed
         Assert.IsTrue(client.IsPathAllowed(Path.Combine(workingDir, "src", "file.cs")));
 
-        // Drive root should be denied
-        var driveRoot = Path.GetPathRoot(workingDir) ?? "C:\\";
-        var rootFilePath = Path.Combine(driveRoot, "hello.txt");
-        Assert.IsFalse(client.IsPathAllowed(rootFilePath), $"Path at drive root should be denied: {rootFilePath}");
+        // Root path should be denied
+        var rootPath = Path.GetPathRoot(workingDir) ?? "/";
+        var rootFilePath = Path.Combine(rootPath, "hello.txt");
+        Assert.IsFalse(client.IsPathAllowed(rootFilePath), $"Path at root should be denied: {rootFilePath}");
 
         // Parent directories should be denied
         var parentDir = Directory.GetParent(workingDir)?.FullName;
@@ -225,11 +225,13 @@ public sealed class DirectorySandboxTests
 
         var client = new CopilotClient(config);
 
-        // These absolute paths should all be denied
-        Assert.IsFalse(client.IsPathAllowed("C:\\Windows\\System32\\cmd.exe"));
-        Assert.IsFalse(client.IsPathAllowed("D:\\"));
-        Assert.IsFalse(client.IsPathAllowed("D:\\hello.txt"));
-        Assert.IsFalse(client.IsPathAllowed("/etc/passwd")); // Unix-style path
+        // Paths outside allowed directory should be denied
+        var outsidePath = Path.Combine(Path.GetTempPath(), "other-location", "file.txt");
+        Assert.IsFalse(client.IsPathAllowed(outsidePath));
+
+        // Root path should be denied
+        var rootPath = Path.GetPathRoot(allowedDir) ?? "/";
+        Assert.IsFalse(client.IsPathAllowed(Path.Combine(rootPath, "hello.txt")));
     }
 }
 
@@ -240,7 +242,7 @@ public sealed class DirectorySandboxTests
 public sealed class ShellCommandPathExtractionTests
 {
     [TestMethod]
-    public void ExtractPathsFromShellCommand_FindsWindowsAbsolutePath()
+    public void ExtractPathsFromShellCommand_FindsAbsolutePath()
     {
         // Create a client with a specific allowed directory
         var allowedDir = Path.Combine(Path.GetTempPath(), "test-allowed");
@@ -251,10 +253,9 @@ public sealed class ShellCommandPathExtractionTests
 
         var client = new CopilotClient(config);
 
-        // Test the IsPathAllowed with paths that would be extracted from a command
-        // like: Set-Content -Path "D:\hello.txt" -Value "test"
-        Assert.IsFalse(client.IsPathAllowed("D:\\hello.txt"));
-        Assert.IsFalse(client.IsPathAllowed("C:\\Windows\\file.txt"));
+        // Paths outside allowed directory should be denied
+        var outsidePath = Path.Combine(Path.GetTempPath(), "other-dir", "file.txt");
+        Assert.IsFalse(client.IsPathAllowed(outsidePath));
 
         // Paths within allowed directory should pass
         Assert.IsTrue(client.IsPathAllowed(Path.Combine(allowedDir, "file.txt")));
@@ -278,15 +279,14 @@ public sealed class ShellCommandPathExtractionTests
         Assert.IsTrue(client.IsPathAllowed(Path.Combine(workingDir, "subdir", "file.txt")));
 
         // Operations outside working dir should be denied
-        var driveRoot = Path.GetPathRoot(workingDir) ?? "C:\\";
-        Assert.IsFalse(client.IsPathAllowed(Path.Combine(driveRoot, "outside.txt")));
+        var rootPath = Path.GetPathRoot(workingDir) ?? "/";
+        Assert.IsFalse(client.IsPathAllowed(Path.Combine(rootPath, "outside.txt")));
     }
 
     [TestMethod]
-    public void ShellSandboxing_BlocksAccessToDriveRoot()
+    public void ShellSandboxing_BlocksAccessToParentDirectory()
     {
-        // Simulates the user's scenario: running from D:\Projects\copilot-ralph
-        // should block access to D:\hello.txt
+        // Running from a project directory should block access to parent directories
         var projectDir = Path.Combine(Path.GetTempPath(), "Projects", "test-project");
         var config = new ClientConfig
         {
@@ -300,9 +300,8 @@ public sealed class ShellCommandPathExtractionTests
         Assert.IsTrue(client.IsPathAllowed(Path.Combine(projectDir, "src", "file.cs")));
         Assert.IsTrue(client.IsPathAllowed(Path.Combine(projectDir, "README.md")));
 
-        // Access to drive root should be blocked
-        var driveRoot = Path.GetPathRoot(projectDir) ?? "C:\\";
-        Assert.IsFalse(client.IsPathAllowed(Path.Combine(driveRoot, "hello.txt")));
-        Assert.IsFalse(client.IsPathAllowed(driveRoot));
+        // Access to parent directory should be blocked
+        var parentDir = Path.GetDirectoryName(projectDir)!;
+        Assert.IsFalse(client.IsPathAllowed(Path.Combine(parentDir, "hello.txt")));
     }
 }

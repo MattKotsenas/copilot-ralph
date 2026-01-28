@@ -53,19 +53,26 @@ public sealed class GitRepoRootTests
     [TestMethod]
     public void PathNormalization_RemovesTrailingSeparators()
     {
-        var path1 = NormalizePath(@"C:\Users\test\");
-        var path2 = NormalizePath(@"C:\Users\test");
+        // Use platform-appropriate paths
+        var pathWithTrailing = Path.Combine(Path.GetTempPath(), "test") + Path.DirectorySeparatorChar;
+        var pathWithoutTrailing = Path.Combine(Path.GetTempPath(), "test");
 
-        Assert.AreEqual(path1, path2);
+        var normalized1 = NormalizePath(pathWithTrailing);
+        var normalized2 = NormalizePath(pathWithoutTrailing);
+
+        Assert.AreEqual(normalized1, normalized2);
+        Assert.IsFalse(normalized1.EndsWith(Path.DirectorySeparatorChar));
     }
 
     [TestMethod]
-    public void PathNormalization_HandlesForwardSlashes()
+    public void PathNormalization_ResolvesRelativePaths()
     {
-        var path1 = NormalizePath(@"C:/Users/test/");
-        var path2 = NormalizePath(@"C:\Users\test");
+        // Test that relative paths are resolved to absolute
+        var relativePath = ".";
+        var normalized = NormalizePath(relativePath);
 
-        Assert.AreEqual(path1, path2);
+        Assert.IsTrue(Path.IsPathRooted(normalized));
+        Assert.AreEqual(Directory.GetCurrentDirectory(), normalized);
     }
 
     private static async Task<string?> GetGitRepoRootAsync(string directory)
