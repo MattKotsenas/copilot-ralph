@@ -60,7 +60,18 @@ This is a C# port of the original [copilot-ralph](https://github.com/JanDeDobbel
 
 ### Installation
 
-Ralph is distributed as a .NET tool. You can install it globally from a local build:
+Ralph is distributed as a .NET tool via Feedz.io.
+
+```powershell
+# Install Ralph globally
+dotnet tool install --global Ralph.Cli `
+  --add-source "https://f.feedz.io/matt-kotsenas/ralph-copilot/nuget/index.json" `
+  --prerelease
+```
+
+### Local Development Installation
+
+During development, you can install from a local build:
 
 ```powershell
 # Clone and build
@@ -72,7 +83,7 @@ dotnet pack src/Ralph.Cli -c Release
 
 # Install as a global tool from the local package
 dotnet tool install --global Ralph.Cli `
-  --add-source ./artifacts/package/release
+  --add-source ./artifacts/package/release `
   --prerelease
 ```
 
@@ -80,13 +91,12 @@ After installation, the `ralph` command will be available globally.
 
 ### Upgrading
 
-After making changes to the code, rebuild and reinstall:
-
 ```powershell
-# Rebuild
-dotnet pack src/Ralph.Cli -c Release
+# From GitHub Packages
+dotnet tool update --global Ralph.Cli --prerelease
 
-# Update the tool
+# Or from local build during development
+dotnet pack src/Ralph.Cli -c Release
 dotnet tool update --global Ralph.Cli `
   --add-source ./artifacts/package/release `
   --prerelease

@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for Nerdbank.GitVersioning
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --verbosity normal
+
+      - name: Pack
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: dotnet pack --no-build --configuration Release --output ./artifacts/packages
+
+      - name: Push to Feedz.io
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: dotnet nuget push ./artifacts/packages/*.nupkg --source "https://f.feedz.io/matt-kotsenas/ralph-copilot/nuget/index.json" --api-key ${{ secrets.FEEDZ_API_KEY }} --skip-duplicate
